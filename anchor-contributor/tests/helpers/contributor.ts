@@ -7,10 +7,10 @@ import {
   getOrCreateAssociatedTokenAccount,
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
+import keccak256 from "keccak256";
 
 import { deriveAddress, getPdaAssociatedTokenAddress, makeReadOnlyAccountMeta, makeWritableAccountMeta } from "./utils";
 import { PostVaaMethod } from "./types";
-import keccak256 from "keccak256";
 
 const INDEX_SALE_INIT_TOKEN_ADDRESS = 33;
 const INDEX_SALE_INIT_ACCEPTED_TOKENS_START = 132;
