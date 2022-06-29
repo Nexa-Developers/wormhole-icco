@@ -40,7 +40,7 @@ export class IccoContributor {
     this.custodian = this.deriveCustodianAccount();
   }
 
-  async createCustodian(payer: web3.Keypair) {
+  async createCustodian(payer: web3.Keypair, options?: web3.ConfirmOptions) {
     const program = this.program;
 
     return program.methods
@@ -50,10 +50,10 @@ export class IccoContributor {
         custodian: this.custodian,
         systemProgram: web3.SystemProgram.programId,
       })
-      .rpc();
+      .rpc(options);
   }
 
-  async initSale(payer: web3.Keypair, initSaleVaa: Buffer): Promise<string> {
+  async initSale(payer: web3.Keypair, initSaleVaa: Buffer, options?: web3.ConfirmOptions): Promise<string> {
     const program = this.program;
 
     const custodian = this.custodian;
@@ -77,6 +77,17 @@ export class IccoContributor {
       const start =
         INDEX_SALE_INIT_ACCEPTED_TOKENS_START + 1 + ACCEPTED_TOKEN_NUM_BYTES * i + INDEX_ACCEPTED_TOKEN_ADDRESS;
       const mint = new web3.PublicKey(payload.subarray(start, start + 32));
+
+      // make atas
+      const tokenAccount = await getOrCreateAssociatedTokenAccount(
+        program.provider.connection,
+        payer,
+        mint,
+        custodian,
+        true
+      );
+
+      // add to remaining accounts to verify
       remainingAccounts.push(makeReadOnlyAccountMeta(mint));
     }
 
@@ -92,7 +103,7 @@ export class IccoContributor {
         systemProgram: web3.SystemProgram.programId,
       })
       .remainingAccounts(remainingAccounts)
-      .rpc();
+      .rpc(options);
   }
 
   async contribute(
@@ -100,7 +111,8 @@ export class IccoContributor {
     saleId: Buffer,
     tokenIndex: number,
     amount: BN,
-    kycSignature: Buffer
+    kycSignature: Buffer,
+    options?: web3.ConfirmOptions
   ): Promise<string> {
     // first find mint
     const state = await this.getSale(saleId);
@@ -135,10 +147,10 @@ export class IccoContributor {
         custodianTokenAcct,
       })
       .signers([payer])
-      .rpc();
+      .rpc(options);
   }
 
-  async attestContributions(payer: web3.Keypair, saleId: Buffer) {
+  async attestContributions(payer: web3.Keypair, saleId: Buffer, options?: web3.ConfirmOptions) {
     const program = this.program;
     const wormhole = this.wormhole;
 
@@ -169,10 +181,10 @@ export class IccoContributor {
         rent: web3.SYSVAR_RENT_PUBKEY,
       })
       .signers([payer])
-      .rpc();
+      .rpc(options);
   }
 
-  async sealSale(payer: web3.Keypair, saleSealedVaa: Buffer): Promise<string> {
+  async sealSale(payer: web3.Keypair, saleSealedVaa: Buffer, options?: web3.ConfirmOptions): Promise<string> {
     const saleId = await parseSaleId(saleSealedVaa);
     const saleState = await this.getSale(saleId);
     const saleTokenMint = saleState.saleTokenMint;
@@ -213,10 +225,15 @@ export class IccoContributor {
         systemProgram: web3.SystemProgram.programId,
       })
       .remainingAccounts(remainingAccounts)
-      .rpc();
+      .rpc(options);
   }
 
-  async bridgeSealedContribution(payer: web3.Keypair, saleId: Buffer, acceptedMint: web3.PublicKey) {
+  async bridgeSealedContribution(
+    payer: web3.Keypair,
+    saleId: Buffer,
+    acceptedMint: web3.PublicKey,
+    options?: web3.ConfirmOptions
+  ) {
     const program = this.program;
     const wormhole = this.wormhole;
     const tokenBridge = this.tokenBridge;
@@ -284,10 +301,10 @@ export class IccoContributor {
       })
       .preInstructions([requestUnitsIx])
       .signers([payer])
-      .rpc();
+      .rpc(options);
   }
 
-  async abortSale(payer: web3.Keypair, saleAbortedVaa: Buffer): Promise<string> {
+  async abortSale(payer: web3.Keypair, saleAbortedVaa: Buffer, options?: web3.ConfirmOptions): Promise<string> {
     const program = this.program;
 
     const custodian = this.custodian;
@@ -307,10 +324,10 @@ export class IccoContributor {
         coreBridgeVaa,
         systemProgram: web3.SystemProgram.programId,
       })
-      .rpc();
+      .rpc(options);
   }
 
-  async claimRefunds(payer: web3.Keypair, saleId: Buffer): Promise<string> {
+  async claimRefunds(payer: web3.Keypair, saleId: Buffer, options?: web3.ConfirmOptions): Promise<string> {
     const saleState = await this.getSale(saleId);
     const totals: any = saleState.totals;
     const mints = totals.map((total) => total.mint);
@@ -355,10 +372,10 @@ export class IccoContributor {
       })
       .signers([payer])
       .remainingAccounts(remainingAccounts)
-      .rpc();
+      .rpc(options);
   }
 
-  async claimAllocation(payer: web3.Keypair, saleId: Buffer): Promise<string> {
+  async claimAllocation(payer: web3.Keypair, saleId: Buffer, options?: web3.ConfirmOptions): Promise<string> {
     const saleState = await this.getSale(saleId);
     const saleTokenMint = saleState.saleTokenMint;
 
@@ -390,10 +407,10 @@ export class IccoContributor {
         systemProgram: web3.SystemProgram.programId,
       })
       .signers([payer])
-      .rpc();
+      .rpc(options);
   }
 
-  async claimExcesses(payer: web3.Keypair, saleId: Buffer): Promise<string> {
+  async claimExcesses(payer: web3.Keypair, saleId: Buffer, options?: web3.ConfirmOptions): Promise<string> {
     const saleState = await this.getSale(saleId);
     const totals: any = saleState.totals;
     const mints = totals.map((total) => total.mint);
@@ -438,23 +455,22 @@ export class IccoContributor {
       })
       .signers([payer])
       .remainingAccounts(remainingAccounts)
-      .rpc();
+      .rpc(options);
   }
 
-  async getCustodian() {
-    return this.program.account.custodian.fetch(this.custodian);
+  async getCustodian(commitment?: web3.Commitment) {
+    return this.program.account.custodian.fetch(this.custodian, commitment);
   }
 
-  async getSale(saleId: Buffer) {
-    return this.program.account.sale.fetch(this.deriveSaleAccount(saleId));
+  async getSale(saleId: Buffer, commitment?: web3.Commitment) {
+    return this.program.account.sale.fetch(this.deriveSaleAccount(saleId), commitment);
   }
 
-  async getBuyer(saleId: Buffer, buyer: web3.PublicKey) {
-    return this.program.account.buyer.fetch(this.deriveBuyerAccount(saleId, buyer));
+  async getBuyer(saleId: Buffer, buyer: web3.PublicKey, commitment?: web3.Commitment) {
+    return this.program.account.buyer.fetch(this.deriveBuyerAccount(saleId, buyer), commitment);
   }
 
   async postVaa(payer: web3.Keypair, signedVaa: Buffer): Promise<void> {
-    //return postVaa(this.program.provider.connection, payer, this.wormhole, signedVaa);
     await this.postVaaWithRetry(
       this.program.provider.connection,
       async (tx) => {

@@ -212,19 +212,6 @@ describe("anchor-contributor", () => {
 
       // nothing to verify
     });
-
-    it("Create ATAs for Custodian", async () => {
-      for (const token of dummyConductor.acceptedTokens) {
-        const allowOwnerOffCurve = true;
-        await getOrCreateAssociatedTokenAccount(
-          connection,
-          orchestrator,
-          hexToPublicKey(token.address),
-          contributor.custodian,
-          allowOwnerOffCurve
-        );
-      }
-    });
   });
 
   describe("Conduct Successful Sale", () => {
@@ -271,13 +258,13 @@ describe("anchor-contributor", () => {
         expect(saleState.status).has.key("active");
 
         // check totals
-        const totals: any = saleState.totals;
+        const assetTotals = saleState.totals as any[];
         const numAccepted = dummyConductor.acceptedTokens.length;
-        expect(totals.length).to.equal(numAccepted);
+        expect(assetTotals.length).to.equal(numAccepted);
 
         for (let i = 0; i < numAccepted; ++i) {
-          const total = totals[i];
-          const acceptedToken = dummyConductor.acceptedTokens[i];
+          const total = assetTotals.at(i);
+          const acceptedToken = dummyConductor.acceptedTokens.at(i);
 
           expect(total.tokenIndex).to.equal(acceptedToken.index);
           expect(tryNativeToHexString(total.mint.toString(), CHAIN_ID_SOLANA)).to.equal(acceptedToken.address);
@@ -354,9 +341,9 @@ describe("anchor-contributor", () => {
     it("User Contributes to Sale", async () => {
       // prep contributions info
       const acceptedTokens = dummyConductor.acceptedTokens;
-      const contributedTokenIndices = [acceptedTokens[0].index, acceptedTokens[3].index];
-      contributions.set(contributedTokenIndices[0], ["1200000000", "3400000000"]);
-      contributions.set(contributedTokenIndices[1], ["5600000000", "7800000000"]);
+      const contributedTokenIndices = [acceptedTokens.at(0).index, acceptedTokens.at(3).index];
+      contributions.set(contributedTokenIndices.at(0), ["1200000000", "3400000000"]);
+      contributions.set(contributedTokenIndices.at(1), ["5600000000", "7800000000"]);
 
       contributedTokenIndices.forEach((tokenIndex) => {
         const amounts = contributions.get(tokenIndex);
@@ -403,10 +390,10 @@ describe("anchor-contributor", () => {
       );
 
       const expectedContributedAmounts = [
-        totalContributions[0],
+        totalContributions.at(0),
         new BN(0),
         new BN(0),
-        totalContributions[1],
+        totalContributions.at(1),
         new BN(0),
         new BN(0),
         new BN(0),
@@ -417,36 +404,36 @@ describe("anchor-contributor", () => {
       // check buyer state
       {
         const buyerState = await contributor.getBuyer(saleId, buyer.publicKey);
-        const totals: any = buyerState.contributions;
-        expect(totals.length).to.equal(numExpected);
+        const buyerTotals = buyerState.contributions as any[];
+        expect(buyerTotals.length).to.equal(numExpected);
 
         // check balance changes and state
         for (let i = 0; i < numExpected; ++i) {
-          let contribution = expectedContributedAmounts[i];
-          expect(startingBalanceBuyer[i].sub(contribution).toString()).to.equal(endingBalanceBuyer[i].toString());
-          expect(startingBalanceCustodian[i].add(contribution).toString()).to.equal(
-            endingBalanceCustodian[i].toString()
+          let contribution = expectedContributedAmounts.at(i);
+          expect(startingBalanceBuyer.at(i).sub(contribution).toString()).to.equal(endingBalanceBuyer.at(i).toString());
+          expect(startingBalanceCustodian.at(i).add(contribution).toString()).to.equal(
+            endingBalanceCustodian.at(i).toString()
           );
 
-          let item = totals[i];
+          let buyerTotal = buyerTotals.at(i);
           const expectedState = contribution.eq(new BN("0")) ? "inactive" : "active";
-          expect(item.status).has.key(expectedState);
-          expect(item.amount.toString()).to.equal(contribution.toString());
-          expect(item.excess.toString()).to.equal("0");
+          expect(buyerTotal.status).has.key(expectedState);
+          expect(buyerTotal.amount.toString()).to.equal(contribution.toString());
+          expect(buyerTotal.excess.toString()).to.equal("0");
         }
       }
 
       // check sale state
       {
         const saleState = await contributor.getSale(saleId);
-        const totals: any = saleState.totals;
-        expect(totals.length).to.equal(numExpected);
+        const assetTotals = saleState.totals as any[];
+        expect(assetTotals.length).to.equal(numExpected);
 
         for (let i = 0; i < numExpected; ++i) {
-          const total = totals[i];
-          expect(total.contributions.toString()).to.equal(expectedContributedAmounts[i].toString());
-          expect(total.allocations.toString()).to.equal("0");
-          expect(total.excessContributions.toString()).to.equal("0");
+          const assetTotal = assetTotals.at(i);
+          expect(assetTotal.contributions.toString()).to.equal(expectedContributedAmounts.at(i).toString());
+          expect(assetTotal.allocations.toString()).to.equal("0");
+          expect(assetTotal.excessContributions.toString()).to.equal("0");
         }
       }
     });
@@ -473,13 +460,13 @@ describe("anchor-contributor", () => {
       // wait for sale to end here
       const saleEnd = dummyConductor.saleEnd;
       await waitUntilBlock(connection, saleEnd);
-      const tx = await contributor.attestContributions(orchestrator, saleId);
+      const tx = await contributor.attestContributions(orchestrator, saleId, { commitment: "confirmed" });
 
       const expectedContributedAmounts = [
-        totalContributions[0],
+        totalContributions.at(0),
         new BN(0),
         new BN(0),
-        totalContributions[1],
+        totalContributions.at(1),
         new BN(0),
         new BN(0),
         new BN(0),
@@ -488,12 +475,9 @@ describe("anchor-contributor", () => {
       const numExpected = expectedContributedAmounts.length;
 
       // now go about your business. read VAA back.
-      await connection.confirmTransaction(tx);
-      const vaaAccountInfo = await connection.getAccountInfo(
-        contributor.deriveAttestContributionsMessageAccount(saleId),
-        "confirmed"
-      );
-      const payload = vaaAccountInfo.data.subarray(95); // 95 is where the payload starts
+      const payload = await connection
+        .getAccountInfo(contributor.deriveAttestContributionsMessageAccount(saleId))
+        .then((info) => info.data.subarray(95) /* 95 is where the payload starts */);
 
       const headerLength = 33;
       const contributionLength = 33;
@@ -510,10 +494,10 @@ describe("anchor-contributor", () => {
         const start = contributionsStart + contributionLength * i;
 
         const tokenIndex = payload.readUint8(start);
-        expect(tokenIndex).to.equal(dummyConductor.acceptedTokens[i].index);
+        expect(tokenIndex).to.equal(dummyConductor.acceptedTokens.at(i).index);
 
         const amount = new BN(payload.subarray(start + 1, start + 33));
-        expect(amount.toString()).to.equal(expectedContributedAmounts[i].toString());
+        expect(amount.toString()).to.equal(expectedContributedAmounts.at(i).toString());
       }
     });
 
@@ -560,11 +544,11 @@ describe("anchor-contributor", () => {
     it("Orchestrator Cannot Bridge Before SaleSealed VAA Processed", async () => {
       const saleId = dummyConductor.getSaleId();
       const sale = await contributor.getSale(saleId);
-      const assets: any = sale.totals;
+      const assetTotals = sale.totals as any[];
 
       let caughtError = false;
       try {
-        const tx = await contributor.bridgeSealedContribution(orchestrator, saleId, assets[0].mint);
+        const tx = await contributor.bridgeSealedContribution(orchestrator, saleId, assetTotals.at(0).mint);
         throw Error(`should not happen: ${tx}`);
       } catch (e) {
         caughtError = verifyErrorMsg(e, "SaleNotSealed");
@@ -594,22 +578,22 @@ describe("anchor-contributor", () => {
         // verify
         expect(saleState.status).has.key("sealed");
 
-        const totals: any = saleState.totals;
-        expect(totals.length).to.equal(allocations.length);
+        const assetTotals = saleState.totals as any[];
+        expect(assetTotals.length).to.equal(allocations.length);
 
         const allocationDivisor = dummyConductor.getAllocationMultiplier();
-        for (let i = 0; i < totals.length; ++i) {
-          const actual = totals[i];
-          const expected = allocations[i];
+        for (let i = 0; i < assetTotals.length; ++i) {
+          const assetTotal = assetTotals.at(i);
+          const expected = allocations.at(i);
 
           const adjustedAllocation = BigNumber.from(expected.allocation).div(allocationDivisor).toString();
-          expect(actual.allocations.toString()).to.equal(adjustedAllocation);
-          expect(actual.excessContributions.toString()).to.equal(expected.excessContribution);
+          expect(assetTotal.allocations.toString()).to.equal(adjustedAllocation);
+          expect(assetTotal.excessContributions.toString()).to.equal(expected.excessContribution);
 
           if (expected.allocation == "0") {
-            expect(actual.status).has.key("nothingToTransfer");
+            expect(assetTotal.status).has.key("nothingToTransfer");
           } else {
-            expect(actual.status).has.key("readyForTransfer");
+            expect(assetTotal.status).has.key("readyForTransfer");
           }
         }
       }
@@ -634,20 +618,20 @@ describe("anchor-contributor", () => {
     it("Orchestrator Bridges Contributions to Conductor", async () => {
       const saleId = dummyConductor.getSaleId();
       const sale = await contributor.getSale(saleId);
-      const assets: any = sale.totals;
+      const assetTotals = sale.totals as any[];
 
       const expectedContributedAmounts = [
-        totalContributions[0],
+        totalContributions.at(0),
         new BN(0),
         new BN(0),
-        totalContributions[1],
+        totalContributions.at(1),
         new BN(0),
         new BN(0),
         new BN(0),
         new BN(0),
       ];
       const expectedSealedAmounts = dummyConductor.allocations.map((item, i) =>
-        expectedContributedAmounts[i].sub(new BN(item.excessContribution))
+        expectedContributedAmounts.at(i).sub(new BN(item.excessContribution))
       );
       const numExpected = expectedSealedAmounts.length;
 
@@ -655,20 +639,19 @@ describe("anchor-contributor", () => {
       const tokenBridgeDecimals = 8;
 
       for (let i = 0; i < numExpected; ++i) {
-        const asset = assets[i];
-        if (asset.status.readyForTransfer) {
-          const mint = asset.mint;
-          const tx = await contributor.bridgeSealedContribution(orchestrator, saleId, mint);
+        const assetTotal = assetTotals.at(i);
+        if (assetTotal.status.readyForTransfer) {
+          const mint = assetTotal.mint;
+          const tx = await contributor.bridgeSealedContribution(orchestrator, saleId, mint, {
+            commitment: "confirmed",
+          });
 
           // now go about your business. read VAA back.
-          await connection.confirmTransaction(tx);
-          const vaaAccountInfo = await connection.getAccountInfo(
-            contributor.deriveSealedTransferMessageAccount(saleId, mint),
-            "confirmed"
-          );
-          const payload = vaaAccountInfo.data.subarray(95); // 95 is where the payload starts
+          const payload = await connection
+            .getAccountInfo(contributor.deriveSealedTransferMessageAccount(saleId, mint))
+            .then((info) => info.data.subarray(95) /* 95 is where the payload starts */);
           expect(payload.length).to.equal(133); // 1 + 32 + 32 + 2 + 32 + 2 + 32
-          expect(payload[0]).to.equal(1); // payload 1 is token transfer
+          expect(payload.at(0)).to.equal(1); // payload 1 is token transfer
 
           const parsedAmount = new BN(payload.subarray(1, 33));
           const mintInfo = await getMint(connection, mint);
@@ -681,7 +664,7 @@ describe("anchor-contributor", () => {
               return new BN("1");
             }
           })();
-          expect(parsedAmount.toString()).to.equal(expectedSealedAmounts[i].div(divisor).toString());
+          expect(parsedAmount.toString()).to.equal(expectedSealedAmounts.at(i).div(divisor).toString());
 
           const parsedTokenAddress = payload.subarray(33, 65);
           const parsedTokenChain = payload.readUint16BE(65);
@@ -709,7 +692,7 @@ describe("anchor-contributor", () => {
         } else {
           let caughtError = false;
           try {
-            const tx = await contributor.bridgeSealedContribution(orchestrator, saleId, asset.mint);
+            const tx = await contributor.bridgeSealedContribution(orchestrator, saleId, assetTotal.mint);
             throw Error(`should not happen: ${tx}`);
           } catch (e) {
             caughtError = verifyErrorMsg(e, "TransferNotAllowed");
@@ -725,11 +708,11 @@ describe("anchor-contributor", () => {
     it("Orchestrator Cannot Bridge Contribution Again", async () => {
       const saleId = dummyConductor.getSaleId();
       const sale = await contributor.getSale(saleId);
-      const assets: any = sale.totals;
+      const assetTotals = sale.totals as any[];
 
       let caughtError = false;
       try {
-        const tx = await contributor.bridgeSealedContribution(orchestrator, saleId, assets[0].mint);
+        const tx = await contributor.bridgeSealedContribution(orchestrator, saleId, assetTotals.at(0).mint);
         throw Error(`should not happen: ${tx}`);
       } catch (e) {
         caughtError = verifyErrorMsg(e, "TransferNotAllowed");
@@ -743,15 +726,15 @@ describe("anchor-contributor", () => {
     it("User Claims Contribution Excess From Sale", async () => {
       const saleId = dummyConductor.getSaleId();
       const sale = await contributor.getSale(saleId);
-      const assets: any = sale.totals;
+      const assetTotals = sale.totals as any[];
 
       const startingBalanceBuyer = await Promise.all(
-        assets.map(async (asset) => {
+        assetTotals.map(async (asset) => {
           return getSplBalance(connection, asset.mint, buyer.publicKey);
         })
       );
       const startingBalanceCustodian = await Promise.all(
-        assets.map(async (asset) => {
+        assetTotals.map(async (asset) => {
           return getPdaSplBalance(connection, asset.mint, contributor.custodian);
         })
       );
@@ -759,12 +742,12 @@ describe("anchor-contributor", () => {
       const tx = await contributor.claimExcesses(buyer, saleId);
 
       const endingBalanceBuyer = await Promise.all(
-        assets.map(async (asset) => {
+        assetTotals.map(async (asset) => {
           return getSplBalance(connection, asset.mint, buyer.publicKey);
         })
       );
       const endingBalanceCustodian = await Promise.all(
-        assets.map(async (asset) => {
+        assetTotals.map(async (asset) => {
           return getPdaSplBalance(connection, asset.mint, contributor.custodian);
         })
       );
@@ -774,19 +757,19 @@ describe("anchor-contributor", () => {
       const numExpected = expectedExcessAmounts.length;
 
       const buyerState = await contributor.getBuyer(saleId, buyer.publicKey);
-      const totals: any = buyerState.contributions;
-      expect(totals.length).to.equal(numExpected);
+      const buyerTotals = buyerState.contributions as any[];
+      expect(buyerTotals.length).to.equal(numExpected);
 
       // check balance changes and state
       for (let i = 0; i < numExpected; ++i) {
-        let excess = expectedExcessAmounts[i];
+        let excess = expectedExcessAmounts.at(i);
 
-        expect(startingBalanceBuyer[i].add(excess).toString()).to.equal(endingBalanceBuyer[i].toString());
-        expect(startingBalanceCustodian[i].sub(excess).toString()).to.equal(endingBalanceCustodian[i].toString());
+        expect(startingBalanceBuyer.at(i).add(excess).toString()).to.equal(endingBalanceBuyer.at(i).toString());
+        expect(startingBalanceCustodian.at(i).sub(excess).toString()).to.equal(endingBalanceCustodian.at(i).toString());
 
-        const item = totals[i];
-        expect(item.status).has.key("excessClaimed");
-        expect(item.excess.toString()).to.equal(excess.toString());
+        const buyerTotal = buyerTotals.at(i);
+        expect(buyerTotal.status).has.key("excessClaimed");
+        expect(buyerTotal.excess.toString()).to.equal(excess.toString());
       }
     });
 
@@ -904,19 +887,19 @@ describe("anchor-contributor", () => {
         expect(saleState.status).has.key("active");
 
         // check totals
-        const totals: any = saleState.totals;
+        const assetTotals = saleState.totals as any[];
         const numAccepted = dummyConductor.acceptedTokens.length;
-        expect(totals.length).to.equal(numAccepted);
+        expect(assetTotals.length).to.equal(numAccepted);
 
         for (let i = 0; i < numAccepted; ++i) {
-          const total = totals[i];
-          const acceptedToken = dummyConductor.acceptedTokens[i];
+          const assetTotal = assetTotals.at(i);
+          const acceptedToken = dummyConductor.acceptedTokens.at(i);
 
-          expect(total.tokenIndex).to.equal(acceptedToken.index);
-          expect(tryNativeToHexString(total.mint.toString(), CHAIN_ID_SOLANA)).to.equal(acceptedToken.address);
-          expect(total.contributions.toString()).to.equal("0");
-          expect(total.allocations.toString()).to.equal("0");
-          expect(total.excessContributions.toString()).to.equal("0");
+          expect(assetTotal.tokenIndex).to.equal(acceptedToken.index);
+          expect(tryNativeToHexString(assetTotal.mint.toString(), CHAIN_ID_SOLANA)).to.equal(acceptedToken.address);
+          expect(assetTotal.contributions.toString()).to.equal("0");
+          expect(assetTotal.allocations.toString()).to.equal("0");
+          expect(assetTotal.excessContributions.toString()).to.equal("0");
         }
       }
     });
@@ -928,9 +911,9 @@ describe("anchor-contributor", () => {
 
       // prep contributions info
       const acceptedTokens = dummyConductor.acceptedTokens;
-      const contributedTokenIndices = [acceptedTokens[0].index, acceptedTokens[3].index];
-      contributions.set(contributedTokenIndices[0], ["1200000000", "3400000000"]);
-      contributions.set(contributedTokenIndices[1], ["5600000000", "7800000000"]);
+      const contributedTokenIndices = [acceptedTokens.at(0).index, acceptedTokens.at(3).index];
+      contributions.set(contributedTokenIndices.at(0), ["1200000000", "3400000000"]);
+      contributions.set(contributedTokenIndices.at(1), ["5600000000", "7800000000"]);
 
       contributedTokenIndices.forEach((tokenIndex) => {
         const amounts = contributions.get(tokenIndex);
@@ -984,15 +967,15 @@ describe("anchor-contributor", () => {
     it("User Claims Refund From Sale", async () => {
       const saleId = dummyConductor.getSaleId();
       const sale = await contributor.getSale(saleId);
-      const assets: any = sale.totals;
+      const assetTotals = sale.totals as any[];
 
       const startingBalanceBuyer = await Promise.all(
-        assets.map(async (asset) => {
+        assetTotals.map(async (asset) => {
           return getSplBalance(connection, asset.mint, buyer.publicKey);
         })
       );
       const startingBalanceCustodian = await Promise.all(
-        assets.map(async (asset) => {
+        assetTotals.map(async (asset) => {
           return getPdaSplBalance(connection, asset.mint, contributor.custodian);
         })
       );
@@ -1000,21 +983,21 @@ describe("anchor-contributor", () => {
       const tx = await contributor.claimRefunds(buyer, saleId);
 
       const endingBalanceBuyer = await Promise.all(
-        assets.map(async (asset) => {
+        assetTotals.map(async (asset) => {
           return getSplBalance(connection, asset.mint, buyer.publicKey);
         })
       );
       const endingBalanceCustodian = await Promise.all(
-        assets.map(async (asset) => {
+        assetTotals.map(async (asset) => {
           return getPdaSplBalance(connection, asset.mint, contributor.custodian);
         })
       );
 
       const expectedRefundAmounts = [
-        totalContributions[0],
+        totalContributions.at(0),
         new BN(0),
         new BN(0),
-        totalContributions[1],
+        totalContributions.at(1),
         new BN(0),
         new BN(0),
         new BN(0),
@@ -1024,19 +1007,19 @@ describe("anchor-contributor", () => {
 
       // get state
       const buyerState = await contributor.getBuyer(saleId, buyer.publicKey);
-      const totals: any = buyerState.contributions;
-      expect(totals.length).to.equal(numExpected);
+      const buyerTotals = buyerState.contributions as any[];
+      expect(buyerTotals.length).to.equal(numExpected);
 
       // check balance changes and state
       for (let i = 0; i < numExpected; ++i) {
-        let refund = expectedRefundAmounts[i];
+        let refund = expectedRefundAmounts.at(i);
 
-        expect(startingBalanceBuyer[i].add(refund).toString()).to.equal(endingBalanceBuyer[i].toString());
-        expect(startingBalanceCustodian[i].sub(refund).toString()).to.equal(endingBalanceCustodian[i].toString());
+        expect(startingBalanceBuyer.at(i).add(refund).toString()).to.equal(endingBalanceBuyer.at(i).toString());
+        expect(startingBalanceCustodian.at(i).sub(refund).toString()).to.equal(endingBalanceCustodian.at(i).toString());
 
-        const item = totals[i];
-        expect(item.status).has.key("refundClaimed");
-        expect(item.excess.toString()).to.equal(refund.toString());
+        const buyerTotal = buyerTotals.at(i);
+        expect(buyerTotal.status).has.key("refundClaimed");
+        expect(buyerTotal.excess.toString()).to.equal(refund.toString());
       }
     });
 

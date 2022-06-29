@@ -8,7 +8,7 @@ import {
   uint8ArrayToHex,
 } from "@certusone/wormhole-sdk";
 import { getForeignAssetSolana } from "@certusone/wormhole-sdk";
-import { web3 } from "@project-serum/anchor";
+import { BN, web3 } from "@project-serum/anchor";
 import { ethers } from "ethers";
 import { AcceptedToken, Raise } from "./icco";
 import { getCurrentTime } from "./testnet/utils";
@@ -120,4 +120,12 @@ export function parseIccoHeader(iccoSignedVaa: Buffer): [number, Buffer] {
 
 export function bytesLikeToHex(byteslike: ethers.BytesLike) {
   return uint8ArrayToHex(ethers.utils.arrayify(byteslike));
+}
+
+export function unitsToUintString(value: string, decimals: number) {
+  return ethers.utils.parseUnits(value, decimals).toString();
+}
+
+export function unitsToUint(value: string, decimals: number) {
+  return new BN(unitsToUintString(value, decimals));
 }

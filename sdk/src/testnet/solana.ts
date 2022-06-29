@@ -4,14 +4,15 @@ import { AnchorContributor } from "../../target/types/anchor_contributor";
 import AnchorContributorIdl from "../../target/idl/anchor_contributor.json";
 
 export function connectToContributorProgram(
-  rpc: string,
+  connection: web3.Connection,
   wallet: web3.Keypair,
-  programId: web3.PublicKey
+  programId: web3.PublicKey,
+  options: web3.ConfirmOptions = {}
 ): Program<AnchorContributor> {
   const program = new Program<AnchorContributor>(
     AnchorContributorIdl as any,
     programId,
-    new AnchorProvider(new web3.Connection(rpc), new NodeWallet(wallet), {})
+    new AnchorProvider(connection, new NodeWallet(wallet), options)
   );
   return program;
 }
