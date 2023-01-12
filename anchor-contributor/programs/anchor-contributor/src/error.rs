@@ -26,6 +26,9 @@ pub enum ContributorError {
     #[msg("InvalidAcceptedTokenPayload")]
     InvalidAcceptedTokenPayload,
 
+    #[msg("InvalidVestingInfoPayload")]
+    InvalidVestingInfoPayload,
+
     #[msg("InvalidAcceptedToken")]
     InvalidAcceptedToken,
 

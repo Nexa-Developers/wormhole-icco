@@ -25,6 +25,7 @@ pub const INDEX_SALE_INIT_ACCEPTED_TOKENS_START: usize = 132;
 
 pub const ACCEPTED_TOKEN_NUM_BYTES: usize = 33;
 pub const ACCEPTED_TOKENS_MAX: usize = 8;
+pub const VESTING_LENGTH_MAX: usize = 20;
 pub const INDEX_ACCEPTED_TOKEN_INDEX: usize = 0;
 pub const INDEX_ACCEPTED_TOKEN_ADDRESS: usize = 1;
 pub const INDEX_ACCEPTED_TOKEN_END: usize = 33;
