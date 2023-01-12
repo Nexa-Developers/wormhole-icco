@@ -46,6 +46,9 @@ contract Contributor is ContributorGovernance, ContributorEvents, ReentrancyGuar
         ICCOStructs.SaleInit memory saleInit = ICCOStructs.parseSaleInit(vm.payload);
         require(!saleExists(saleInit.saleID), "sale already initiated");
 
+        /// @dev cache to save on gas
+        uint256 acceptedTokensLength = saleInit.acceptedTokens.length;
+
         /// save the parsed sale information 
         ContributorStructs.Sale memory sale = ContributorStructs.Sale({
             saleID : saleInit.saleID,
@@ -55,33 +58,41 @@ contract Contributor is ContributorGovernance, ContributorEvents, ReentrancyGuar
             saleStart : saleInit.saleStart,
             saleEnd : saleInit.saleEnd,
             unlockTimestamp : saleInit.unlockTimestamp,
-            acceptedTokensChains : new uint16[](saleInit.acceptedTokens.length),
-            acceptedTokensAddresses : new bytes32[](saleInit.acceptedTokens.length),
-            acceptedTokensConversionRates : new uint128[](saleInit.acceptedTokens.length),
+            acceptedTokensChains : new uint16[](acceptedTokensLength),
+            acceptedTokensAddresses : new bytes32[](acceptedTokensLength),
+            acceptedTokensConversionRates : new uint128[](acceptedTokensLength),
+            disabledAcceptedTokens: new bool[](acceptedTokensLength),
             recipient : saleInit.recipient,
             authority : saleInit.authority,
             isSealed : false,
             isAborted : false,
-            allocations : new uint256[](saleInit.acceptedTokens.length),
-            excessContributions : new uint256[](saleInit.acceptedTokens.length)
+            allocations : new uint256[](acceptedTokensLength),
+            excessContributions : new uint256[](acceptedTokensLength)
         });
+
+        /// make sure the VAA is for an active sale
+        require(saleInit.saleEnd >= block.timestamp, "sale has already ended");
 
         /**
          * @dev This saves accepted token info for only the relevant tokens
          * on this Contributor chain.
-         * - it checks that the token is a valid ERC20 token 
-         */
-        for (uint256 i = 0; i < saleInit.acceptedTokens.length; i++) {
+         * - it checks that the token is a valid ERC20 token
+         */  
+        for (uint256 i = 0; i < acceptedTokensLength;) {
             if (saleInit.acceptedTokens[i].tokenChain == chainId()) {
                 address tokenAddress = address(uint160(uint256(saleInit.acceptedTokens[i].tokenAddress)));
                 (, bytes memory queriedTotalSupply) = tokenAddress.staticcall(
                     abi.encodeWithSelector(IERC20.totalSupply.selector)
                 );
-                require(queriedTotalSupply.length > 0, "non-existent ERC20");
+                /// @dev mark the accepted token as disabled if it's not a real erc20
+                if (queriedTotalSupply.length == 0) {
+                    sale.disabledAcceptedTokens[i] = true;
+                }
             }
             sale.acceptedTokensChains[i] = saleInit.acceptedTokens[i].tokenChain;
             sale.acceptedTokensAddresses[i] = saleInit.acceptedTokens[i].tokenAddress;
             sale.acceptedTokensConversionRates[i] = saleInit.acceptedTokens[i].conversionRate;
+            unchecked { i += 1; }
         }
 
         /// save the sale in contract storage
@@ -95,8 +106,9 @@ contract Contributor is ContributorGovernance, ContributorEvents, ReentrancyGuar
      * @dev verifySignature serves to verify a contribution signature for KYC purposes.
      * - it computes the keccak256 hash of data passed by the client
      * - it recovers the KYC authority key from the hashed data and signature
+     * - it saves gas by not caling the verifySignature method in ICCOStructs.sol
      */ 
-    function verifySignature(bytes memory encodedHashData, bytes memory sig, address authority) public pure returns (bool) {
+    function verifySignature(bytes memory encodedHashData, bytes memory sig, address authority) internal pure returns (bool) {
         require(sig.length == 65, "incorrect signature length"); 
         require(encodedHashData.length > 0, "no hash data");
 
@@ -144,8 +156,11 @@ contract Contributor is ContributorGovernance, ContributorEvents, ReentrancyGuar
             (uint256 start, uint256 end, ) = getSaleTimeframe(saleId);
 
             require(block.timestamp >= start, "sale not yet started");
-            require(block.timestamp <= end, "sale has ended");
+            require(block.timestamp <= end, "sale has ended"); 
         }
+
+        /// @dev make sure the token is enabled (still accepted by the sale)
+        require(!isTokenDisabled(saleId, tokenIndex), "token is disabled");
 
         /// query information for the passed tokendIndex
         (uint16 tokenChain, bytes32 tokenAddressBytes,) = getSaleAcceptedTokenInfo(saleId, tokenIndex);
@@ -213,13 +228,20 @@ contract Contributor is ContributorGovernance, ContributorEvents, ReentrancyGuar
         require(!sale.isSealed && !sale.isAborted, "already sealed / aborted");
         require(block.timestamp > sale.saleEnd, "sale has not yet ended");
 
+        IWormhole wormhole = wormhole();
+        uint256 messageFee = wormhole.messageFee();
+
+        require(msg.value == messageFee, "incorrect value");
+
         /// count accepted tokens for this contract to allocate memory in ContributionsSealed struct 
         uint256 nativeTokens = 0;
         uint16 chainId = chainId(); /// cache from storage
-        for (uint256 i = 0; i < sale.acceptedTokensAddresses.length; i++) {
+        uint256 acceptedTokensLength = sale.acceptedTokensAddresses.length; /// cache to save on gas
+        for (uint256 i = 0; i < acceptedTokensLength;) {
             if (sale.acceptedTokensChains[i] == chainId) {
                 nativeTokens++;
             }
+            unchecked { i += 1; }
         }
 
         /// declare ContributionsSealed struct and add contribution info
@@ -227,21 +249,23 @@ contract Contributor is ContributorGovernance, ContributorEvents, ReentrancyGuar
             payloadID : 2,
             saleID : saleId,
             chainID : uint16(chainId),
+            solanaTokenAccount : bytes32(0),
             contributions : new ICCOStructs.Contribution[](nativeTokens)
         });
 
         uint256 ci = 0;
-        for (uint256 i = 0; i < sale.acceptedTokensAddresses.length; i++) {
+        for (uint256 i = 0; i < acceptedTokensLength;) {
             if (sale.acceptedTokensChains[i] == chainId) {
                 consSealed.contributions[ci].tokenIndex = uint8(i);
                 consSealed.contributions[ci].contributed = getSaleTotalContribution(saleId, i);
                 ci++;
             }
+            unchecked { i += 1; }
         }
 
         /// @dev send encoded ContributionsSealed message to Conductor contract
-        wormholeSequence = wormhole().publishMessage{
-            value : msg.value
+        wormholeSequence = wormhole.publishMessage{
+            value : messageFee
         }(0, ICCOStructs.encodeContributionsSealed(consSealed), consistencyLevel());
 
         /// emit EventAttestContribution event.
@@ -249,12 +273,12 @@ contract Contributor is ContributorGovernance, ContributorEvents, ReentrancyGuar
     }
 
     /**
-     * @dev sealSale serves to send contributed funds to the saleRecipient.
+     * @dev saleSealed serves to send contributed funds to the saleRecipient.
      * - it parses the SaleSealed message sent from the Conductor contract
      * - it determines if all the sale tokens are in custody of this contract
      * - it send the contributed funds to the token sale recipient
      */
-    function saleSealed(bytes memory saleSealedVaa) public payable {
+    function saleSealed(bytes memory saleSealedVaa) public payable nonReentrant {
         /// @dev confirms that the message is from the Conductor and valid
         (IWormhole.VM memory vm, bool valid, string memory reason) = wormhole().parseAndVerifyVM(saleSealedVaa);
 
@@ -262,23 +286,30 @@ contract Contributor is ContributorGovernance, ContributorEvents, ReentrancyGuar
         require(verifyConductorVM(vm), "invalid emitter");
 
         /// parses the SaleSealed message sent by the Conductor
-        ICCOStructs.SaleSealed memory sealedSale = ICCOStructs.parseSaleSealed(vm.payload);
-
+        ICCOStructs.SaleSealed memory sealedSale = ICCOStructs.parseSaleSealed(vm.payload); 
+        
         ContributorStructs.Sale memory sale = sales(sealedSale.saleID);
 
-        // check to see if the sale was aborted already
+        /// set up struct used for wormhole message accounting
+        ICCOStructs.WormholeFees memory feeAccounting;
+        feeAccounting.messageFee = wormhole().messageFee();
+        feeAccounting.valueSent = msg.value;
+
+        /// check to see if the sale was aborted already
         require(!sale.isSealed && !sale.isAborted, "already sealed / aborted");
 
         /// confirm that the allocated sale tokens are in custody of this contract
-        uint16 thisChainId = chainId(); /// cache from storage
+        /// cache variables to save on gas
+        uint16 thisChainId = chainId(); 
+        ITokenBridge tknBridge = tokenBridge();
         {
             address saleTokenAddress;
-            if (sale.tokenChain == chainId()) {
+            if (sale.tokenChain == thisChainId) {
                 /// normal token transfer on same chain
                 saleTokenAddress = address(uint160(uint256(sale.tokenAddress)));
             } else {
                 /// identify wormhole token bridge wrapper
-                saleTokenAddress = tokenBridge().wrappedAsset(sale.tokenChain, sale.tokenAddress);
+                saleTokenAddress = tknBridge.wrappedAsset(sale.tokenChain, sale.tokenAddress);
                 require(saleTokenAddress != address(0), "sale token is not attested");
             }
 
@@ -291,7 +322,8 @@ contract Contributor is ContributorGovernance, ContributorEvents, ReentrancyGuar
 
             /// store the allocated token amounts defined in the SaleSealed message
             uint256 tokenAllocation;
-            for (uint256 i = 0; i < sealedSale.allocations.length; i++) {
+            uint256 allocationsLength = sealedSale.allocations.length;
+            for (uint256 i = 0; i < allocationsLength;) {
                 ICCOStructs.Allocation memory allo = sealedSale.allocations[i];
                 if (sale.acceptedTokensChains[allo.tokenIndex] == thisChainId) {
                     tokenAllocation += allo.allocation;
@@ -300,26 +332,28 @@ contract Contributor is ContributorGovernance, ContributorEvents, ReentrancyGuar
                     /// set the excessContribution for this token
                     setExcessContribution(sealedSale.saleID, allo.tokenIndex, allo.excessContribution);
                 }
-            }
 
+                /// @dev count how many token bridge transfer will occur in sealSale
+                if (sale.acceptedTokensChains[i] != thisChainId) {
+                    feeAccounting.bridgeCount += 1;
+                }
+                unchecked { i += 1; }
+            }
+ 
             require(tokenBalance >= tokenAllocation, "insufficient sale token balance");
             setSaleSealed(sealedSale.saleID);
+
+            /// @dev msg.value must cover all token bridge transfer fees (when bridgeCount is 0, no fees are charged in this method)
+            require(feeAccounting.valueSent >= feeAccounting.messageFee * feeAccounting.bridgeCount, "insufficient value");
         }
         
-        /** 
-         * @dev Initialize token bridge interface in case the contributions
-         * are being sent to a recipient on a different chain.
-         */
-        ITokenBridge tknBridge = tokenBridge();
-        uint256 messageFee = wormhole().messageFee();
-        uint256 valueSent = msg.value;
-
         /**
          * @dev Cache the conductorChainId from storage to save on gas.
          * We will check each acceptedToken to see if it's from this chain.
-         */
+         */ 
         uint16 conductorChainId = conductorChainId();
-        for (uint256 i = 0; i < sale.acceptedTokensAddresses.length; i++) {
+        uint256 acceptedTokensLength = sale.acceptedTokensAddresses.length;
+        for (uint256 i = 0; i < acceptedTokensLength;) {
             if (sale.acceptedTokensChains[i] == thisChainId) {
                 /// compute the total contributions to send to the recipient
                 uint256 totalContributionsLessExcess = getSaleTotalContribution(sale.saleID, i) - getSaleExcessContribution(sale.saleID, i); 
@@ -363,11 +397,8 @@ contract Contributor is ContributorGovernance, ContributorEvents, ReentrancyGuar
                             totalContributionsLessExcess
                         );
 
-                        require(valueSent >= messageFee, "insufficient wormhole messaging fees");
-                        valueSent -= messageFee;
-
                         tknBridge.transferTokens{
-                            value : messageFee
+                            value : feeAccounting.messageFee
                         }(
                             acceptedTokenAddress,
                             totalContributionsLessExcess,
@@ -376,10 +407,18 @@ contract Contributor is ContributorGovernance, ContributorEvents, ReentrancyGuar
                             0,
                             0
                         );
+
+                        /// uptick fee counter
+                        feeAccounting.accumulatedFees += feeAccounting.messageFee;
                     }
                 }
             }
-        }
+            unchecked { i += 1; }
+        } 
+
+        /// @dev refund the caller any extra wormhole fees
+        feeAccounting.refundAmount = feeAccounting.valueSent - feeAccounting.accumulatedFees;  
+        if (feeAccounting.refundAmount > 0) payable(msg.sender).transfer(feeAccounting.refundAmount);
 
         /// emit EventSealSale event.
         emit EventSaleSealed(sale.saleID);
@@ -394,6 +433,8 @@ contract Contributor is ContributorGovernance, ContributorEvents, ReentrancyGuar
 
         ICCOStructs.SaleAborted memory abortedSale = ICCOStructs.parseSaleAborted(vm.payload);
 
+        require(saleExists(abortedSale.saleID), "sale not initiated");
+
         /// set the sale aborted
         setSaleAborted(abortedSale.saleID);
     }
@@ -405,7 +446,7 @@ contract Contributor is ContributorGovernance, ContributorEvents, ReentrancyGuar
      * - it marks the allocation as claimed to prevent multiple claims for the same allocation
      * - it only distributes tokens once the unlock period has ended
      */
-    function claimAllocation(uint256 saleId, uint256 tokenIndex) public {
+    function claimAllocation(uint256 saleId, uint256 tokenIndex) public nonReentrant {
         require(saleExists(saleId), "sale not initiated");
 
         /// make sure the sale is sealed and not aborted
@@ -419,10 +460,13 @@ contract Contributor is ContributorGovernance, ContributorEvents, ReentrancyGuar
         /// @dev contributors can only claim after the unlock timestamp
         require(block.timestamp >= unlockTimestamp, "tokens have not been unlocked");
 
+        /// cache to save on gas
+        uint16 thisChainId = chainId();
+
         /// make sure the contributor is claiming on the right chain
         (uint16 contributedTokenChainId, , ) = getSaleAcceptedTokenInfo(saleId, tokenIndex);
 
-        require(contributedTokenChainId == chainId(), "allocation needs to be claimed on a different chain");
+        require(contributedTokenChainId == thisChainId, "allocation needs to be claimed on a different chain");
 
         /// set the allocation claimed - also serves as reentrancy protection
         setAllocationClaimed(saleId, tokenIndex, msg.sender);
@@ -440,7 +484,7 @@ contract Contributor is ContributorGovernance, ContributorEvents, ReentrancyGuar
         uint256 thisAllocation = (getSaleAllocation(saleId, tokenIndex) * thisContribution) / totalContribution;
 
         address tokenAddress;
-        if (sale.tokenChain == chainId()) {
+        if (sale.tokenChain == thisChainId) {
             /// normal token transfer on same chain
             tokenAddress = address(uint160(uint256(sale.tokenAddress)));
         } else {
@@ -460,7 +504,7 @@ contract Contributor is ContributorGovernance, ContributorEvents, ReentrancyGuar
      * - it marks the excessContribution as claimed to prevent multiple claims for the same refund
      * - it transfers the excessContribution to the contributor's wallet
      */
-    function claimExcessContribution(uint256 saleId, uint256 tokenIndex) public {
+    function claimExcessContribution(uint256 saleId, uint256 tokenIndex) public nonReentrant {
         require(saleExists(saleId), "sale not initiated");
 
         /// return any excess contributions 
@@ -473,6 +517,10 @@ contract Contributor is ContributorGovernance, ContributorEvents, ReentrancyGuar
         require(isSealed, "token sale is not sealed");
         require(!excessContributionIsClaimed(saleId, tokenIndex, msg.sender), "excess contribution already claimed");
 
+        (uint16 tokenChainId,, ) = getSaleAcceptedTokenInfo(saleId, tokenIndex);
+
+        require(tokenChainId == chainId(), "refund needs to be claimed on another chain");
+ 
         setExcessContributionClaimed(saleId, tokenIndex, msg.sender);
 
         /// calculate how much excess to refund
@@ -495,7 +543,7 @@ contract Contributor is ContributorGovernance, ContributorEvents, ReentrancyGuar
      * - it confirms that the sale was aborted
      * - it transfers the contributed funds back to the contributor's wallet
      */
-    function claimRefund(uint256 saleId, uint256 tokenIndex) public {
+    function claimRefund(uint256 saleId, uint256 tokenIndex) public nonReentrant {
         require(saleExists(saleId), "sale not initiated");
 
         (, bool isAborted) = getSaleStatus(saleId);
@@ -524,6 +572,25 @@ contract Contributor is ContributorGovernance, ContributorEvents, ReentrancyGuar
         emit EventClaimRefund(saleId, tokenIndex, thisRefundContribution);
     }
 
+    /// @dev saleAuthorityUpdated serves to consume an AuthorityUpdated VAA and change a sale's kyc authority
+    function saleAuthorityUpdated(bytes memory authorityUpdatedVaa) public {
+        /// @dev confirms that the message is from the Conductor and valid
+        (IWormhole.VM memory vm, bool valid, string memory reason) = wormhole().parseAndVerifyVM(authorityUpdatedVaa);
+
+        require(valid, reason);
+        require(verifyConductorVM(vm), "invalid emitter");
+
+        /// parse the sale information sent by the Conductor contract
+        ICCOStructs.AuthorityUpdated memory update = ICCOStructs.parseAuthorityUpdated(vm.payload);
+        require(saleExists(update.saleID), "sale not initiated");
+
+        /// @dev check if the VAA was consumed already
+        require(update.newAuthority != authority(update.saleID), "newAuthority already set");
+
+        /// @dev update sale state with the new authority public key
+        setNewAuthority(update.saleID, update.newAuthority);
+    }
+
     // @dev verifyConductorVM serves to validate VMs by checking against the known Conductor contract 
     function verifyConductorVM(IWormhole.VM memory vm) internal view returns (bool) {
         if (conductorContract() == vm.emitterAddress && conductorChainId() == vm.emitterChainId) {
@@ -536,5 +603,8 @@ contract Contributor is ContributorGovernance, ContributorEvents, ReentrancyGuar
     /// @dev saleExists serves to check if a sale exists
     function saleExists(uint256 saleId) public view returns (bool exists) {
         exists = (getSaleTokenAddress(saleId) != bytes32(0));
-    }
+    } 
+
+    // necessary for receiving native assets
+    receive() external payable {}
 }

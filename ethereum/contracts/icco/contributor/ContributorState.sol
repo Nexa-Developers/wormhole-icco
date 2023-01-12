@@ -57,6 +57,10 @@ contract ContributorStorage {
 
         /// deployer of the contracts
         address owner;
+
+        /// intermediate state when transfering contract ownership
+        address pendingOwner;
+
         /// number of confirmations for wormhole messages
         uint8 consistencyLevel;
 
@@ -80,9 +84,12 @@ contract ContributorStorage {
 
         /// sale id > [token id > contributor > isClaimed
         mapping(uint256 => mapping(uint256 => mapping(address => bool))) excessContributionIsClaimed;
+
+        /// @dev storage gap 
+        uint256[50] ______gap;
     }
 }
 
 contract ContributorState {
-    ContributorStorage.State _state;
+    ContributorStorage.State _state;    
 }

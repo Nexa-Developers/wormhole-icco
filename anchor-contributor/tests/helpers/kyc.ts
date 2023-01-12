@@ -12,7 +12,7 @@ export class KycAuthority {
   contributor: IccoContributor;
 
   constructor(privateKey: string, conductorAddress: string, contributor: IccoContributor) {
-    this.privateKey = Buffer.from(privateKey, "hex");
+    this.updatePrivateKey(privateKey);
     this.conductorAddress = conductorAddress;
     this.contributor = contributor;
   }
@@ -32,7 +32,7 @@ export class KycAuthority {
 
       const idx = totals.findIndex((item) => item.tokenIndex == tokenIndex);
       if (idx < 0) {
-        throw Error("tokenIndex not found");
+        throw new Error("tokenIndex not found");
       }
 
       const state = await this.getBuyer(saleId, buyer);
@@ -65,5 +65,9 @@ export class KycAuthority {
     packed.write(signature.s.toString(16).padStart(64, "0"), 32, "hex");
     packed.writeUInt8(signature.recoveryParam, 64);
     return packed;
+  }
+
+  updatePrivateKey(privateKey: string) {
+    this.privateKey = Buffer.from(privateKey, "hex");
   }
 }

@@ -89,6 +89,9 @@ pub enum ContributorError {
     #[msg("SaleNotSealed")]
     SaleNotSealed,
 
+    #[msg("SaleTokenNotAttested")]
+    SaleTokenNotAttested,
+
     #[msg("TooManyAcceptedTokens")]
     TooManyAcceptedTokens,
 
@@ -97,4 +100,31 @@ pub enum ContributorError {
 
     #[msg("AllocationsLocked")]
     AllocationsLocked,
+
+    #[msg("SaleContributionsAreBlocked")]
+    SaleContributionsAreBlocked,
+
+    #[msg("AssetContributionsAreBlocked")]
+    AssetContributionsAreBlocked,
+
+    #[msg("InvalidAcceptedTokenATA")]
+    InvalidAcceptedTokenATA,
+
+    #[msg("InvalidWormholeMessageAccount")]
+    InvalidWormholeMessageAccount,
+
+    #[msg("InvalidTokenBridgeProgram")]
+    InvalidTokenBridgeProgram,
+
+    #[msg("InvalidWormholeProgram")]
+    InvalidWormholeProgram,
+
+    #[msg("InvalidSystemProgram")]
+    InvalidSystemProgram,
+
+    #[msg("InvalidSaleTokenATA")]
+    InvalidSaleTokenATA,
+
+    #[msg("InvalidSaleToken")]
+    InvalidSaleToken,
 }

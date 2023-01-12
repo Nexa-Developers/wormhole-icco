@@ -19,7 +19,7 @@ pub struct AssetTotal {
     pub contributions: u64,        // 8
     pub allocations: u64,          // 8
     pub excess_contributions: u64, // 8
-    pub status: AssetStatus,       // 1
+    pub asset_status: AssetStatus, // 1
 }
 
 #[derive(
@@ -30,6 +30,7 @@ pub enum AssetStatus {
     NothingToTransfer,
     ReadyForTransfer,
     TransferredToConductor,
+    InvalidToken,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone, PartialEq, Eq)]
@@ -50,19 +51,21 @@ pub enum SaleStatus {
 
 #[account]
 pub struct Sale {
-    pub id: [u8; 32],                          // 32
-    pub associated_sale_token_address: Pubkey, // 32
-    pub token_chain: u16,                      // 2
-    pub token_decimals: u8,                    // 1
-    pub times: SaleTimes,                      // SaleStatus::LEN
-    pub recipient: [u8; 32],                   // 32
-    pub status: SaleStatus,                    // 1
-    pub kyc_authority: [u8; 20],               // 20 (this is an evm pubkey)
-    pub initialized: bool,                     // 1
+    pub id: [u8; 32],            // 32
+    pub token_address: [u8; 32], // 32    Native for sale token chain.
+    pub token_chain: u16,        // 2
+    pub token_decimals: u8,      // 1
+    pub times: SaleTimes,        // SaleTimes::LEN
+    pub recipient: [u8; 32],     // 32
+    pub status: SaleStatus,      // 1
+    pub kyc_authority: [u8; 20], // 20 (this is an evm pubkey)
+    pub initialized: bool,       // 1
 
     pub totals: Vec<AssetTotal>, // 4 + AssetTotal::LEN * ACCEPTED_TOKENS_MAX
     pub native_token_decimals: u8, // 1
-    pub sale_token_mint: Pubkey, // 32
+    pub sale_token_mint: Pubkey, // 32   Solana Native or wrapped.
+    pub sale_token_ata: Pubkey,  // 32
+    pub contributions_blocked: bool, // 1 Bad sale token mint address.
 }
 
 impl SaleTimes {
@@ -84,12 +87,16 @@ impl AssetTotal {
             contributions: 0,
             allocations: 0,
             excess_contributions: 0,
-            status: AssetStatus::Active,
+            asset_status: AssetStatus::Active,
         })
     }
 
+    pub fn invalidate(&mut self) {
+        self.asset_status = AssetStatus::InvalidToken;
+    }
+
     pub fn prepare_for_transfer(&mut self) {
-        self.status = {
+        self.asset_status = {
             if self.contributions == 0 {
                 AssetStatus::NothingToTransfer
             } else {
@@ -98,43 +105,43 @@ impl AssetTotal {
         };
     }
 
+    pub fn is_valid_for_contribution(&self) -> bool {
+        self.asset_status != AssetStatus::InvalidToken
+    }
+
     pub fn is_ready_for_transfer(&self) -> bool {
-        self.status == AssetStatus::ReadyForTransfer
+        self.asset_status == AssetStatus::ReadyForTransfer
     }
 
     pub fn set_transferred(&mut self) {
-        self.status = AssetStatus::TransferredToConductor;
+        self.asset_status = AssetStatus::TransferredToConductor;
     }
 
     pub fn deserialize_associated_token_account(
         &self,
         token_acct_info: &AccountInfo,
         authority: &Pubkey,
-    ) -> Result<TokenAccount> {
-        require!(
-            get_associated_token_address(authority, &self.mint) == token_acct_info.key(),
-            ContributorError::InvalidAccount
-        );
-        AssetTotal::deserialize_token_account_unchecked(token_acct_info)
+    ) -> Result<Option<TokenAccount>> {
+        Ok(
+            match AssetTotal::deserialize_token_account_unchecked(token_acct_info) {
+                Ok(account) => {
+                    // If we successfully deserialize TokenAccount, we require
+                    // that it is an associated token account
+                    require!(
+                        get_associated_token_address(authority, &self.mint)
+                            == token_acct_info.key(),
+                        ContributorError::InvalidAccount
+                    );
+                    Some(account)
+                }
+                // Otherwise (in the case of an invalid remaining account),
+                // we will return None.
+                Err(_) => None,
+            },
+        )
     }
 
-    pub fn deserialize_token_account(
-        &self,
-        token_acct_info: &AccountInfo,
-        owner: &Pubkey,
-    ) -> Result<TokenAccount> {
-        let token_acct = AssetTotal::deserialize_token_account_unchecked(token_acct_info)?;
-        require!(token_acct.owner == *owner, ContributorError::InvalidAccount);
-        require!(
-            token_acct.mint == self.mint,
-            ContributorError::InvalidAccount
-        );
-        Ok(token_acct)
-    }
-
-    pub fn deserialize_token_account_unchecked(
-        token_acct_info: &AccountInfo,
-    ) -> Result<TokenAccount> {
+    fn deserialize_token_account_unchecked(token_acct_info: &AccountInfo) -> Result<TokenAccount> {
         let mut bf: &[u8] = &token_acct_info.try_borrow_data()?;
         TokenAccount::try_deserialize_unchecked(&mut bf)
     }
@@ -152,7 +159,9 @@ impl Sale {
         + 1
         + (4 + AssetTotal::LEN * ACCEPTED_TOKENS_MAX)
         + 1
-        + 32;
+        + 32
+        + 32
+        + 1;
 
     pub fn parse_sale_init(&mut self, payload: &[u8]) -> Result<()> {
         require!(!self.initialized, ContributorError::SaleAlreadyInitialized);
@@ -166,12 +175,22 @@ impl Sale {
         );
 
         let num_accepted = payload[INDEX_SALE_INIT_ACCEPTED_TOKENS_START] as usize;
+
+        require!(
+            payload.len()
+                == INDEX_SALE_INIT_ACCEPTED_TOKENS_START
+                    + 1
+                    + ACCEPTED_TOKEN_NUM_BYTES * num_accepted
+                    + SALE_INIT_TAIL,
+            ContributorError::InvalidVaaPayload
+        );
+
         require!(
             num_accepted <= ACCEPTED_TOKENS_MAX,
             ContributorError::TooManyAcceptedTokens
         );
 
-        self.totals = Vec::with_capacity(ACCEPTED_TOKENS_MAX);
+        self.totals = Vec::with_capacity(num_accepted);
         for i in 0..num_accepted {
             let start = INDEX_SALE_INIT_ACCEPTED_TOKENS_START + 1 + ACCEPTED_TOKEN_NUM_BYTES * i;
             self.totals.push(AssetTotal::make_from_slice(
@@ -182,11 +201,9 @@ impl Sale {
         self.id = Sale::get_id(payload);
 
         // deserialize other things
-        let mut addr = [0u8; 32];
-        addr.copy_from_slice(
+        self.token_address.copy_from_slice(
             &payload[INDEX_SALE_INIT_TOKEN_ADDRESS..(INDEX_SALE_INIT_TOKEN_ADDRESS + 32)],
         );
-        self.associated_sale_token_address = Pubkey::new(&addr);
         self.token_chain = to_u16_be(payload, INDEX_SALE_INIT_TOKEN_CHAIN);
         self.token_decimals = payload[INDEX_SALE_INIT_TOKEN_DECIMALS];
 
@@ -210,18 +227,26 @@ impl Sale {
 
         // finally set the status to active
         self.status = SaleStatus::Active;
+        self.contributions_blocked = false;
 
         Ok(())
     }
 
-    pub fn set_sale_token_mint_info(&mut self, mint: &Pubkey, mint_info: &Mint) -> Result<()> {
+    pub fn set_sale_token_mint_info(
+        &mut self,
+        mint: &Pubkey,
+        mint_info: &Mint,
+        custodian: &Pubkey,
+    ) -> Result<()> {
         let decimals = mint_info.decimals;
         require!(
             self.token_decimals >= decimals,
             ContributorError::InvalidTokenDecimals
         );
         self.native_token_decimals = decimals;
-        self.sale_token_mint = mint.clone();
+        self.sale_token_mint = *mint;
+        // Derive sale_token_ata and store it in this sale for later verification and to send it to the conductor in attest VAA.
+        self.sale_token_ata = get_associated_token_address(custodian, &self.sale_token_mint);
         Ok(())
     }
 
@@ -241,9 +266,9 @@ impl Sale {
     pub fn update_total_contributions(
         &mut self,
         block_time: i64,
-        token_index: u8,
+        asset_total_idx: usize,
         contributed: u64,
-    ) -> Result<usize> {
+    ) -> Result<()> {
         require!(self.is_active(block_time), ContributorError::SaleEnded);
 
         let block_time = block_time as u64;
@@ -251,10 +276,9 @@ impl Sale {
             block_time >= self.times.start,
             ContributorError::ContributionTooEarly
         );
-        let idx = self.get_index(token_index)?;
-        self.totals[idx].contributions += contributed;
+        self.totals[asset_total_idx].contributions += contributed;
 
-        Ok(idx)
+        Ok(())
     }
 
     pub fn serialize_contributions(&self, block_time: i64) -> Result<Vec<u8>> {
@@ -269,6 +293,7 @@ impl Sale {
         let mut attested: Vec<u8> = Vec::with_capacity(
             PAYLOAD_HEADER_LEN
                 + size_of_val(&CHAIN_ID)
+                + size_of_val(&self.sale_token_ata)
                 + size_of_val(&contributions_len)
                 + totals.len() * ATTEST_CONTRIBUTIONS_ELEMENT_LEN,
         );
@@ -277,6 +302,7 @@ impl Sale {
         attested.push(PAYLOAD_ATTEST_CONTRIBUTIONS);
         attested.extend(self.id.iter());
         attested.extend(CHAIN_ID.to_be_bytes());
+        attested.extend(self.sale_token_ata.to_bytes());
 
         // push contributions length
         attested.push(contributions_len);
@@ -357,6 +383,23 @@ impl Sale {
         Ok(())
     }
 
+    pub fn parse_kyc_authority_updated(&mut self, block_time: i64, payload: &[u8]) -> Result<()> {
+        require!(self.is_active(block_time), ContributorError::SaleEnded);
+
+        // check that the payload has the correct size
+        // payload type + sale id + kyc authority ethereum public key
+        require!(
+            payload.len() == PAYLOAD_HEADER_LEN + 20,
+            ContributorError::InvalidVaaPayload
+        );
+
+        // finally set new KYC authority.
+        self.kyc_authority
+            .copy_from_slice(&payload[PAYLOAD_HEADER_LEN..PAYLOAD_HEADER_LEN + 20]);
+
+        Ok(())
+    }
+
     pub fn verify_kyc_authority(
         &self,
         token_index: u8,
@@ -423,13 +466,18 @@ impl Sale {
         return self.initialized && self.status == SaleStatus::Aborted;
     }
 
-    pub fn get_index(&self, token_index: u8) -> Result<usize> {
-        let result = self
-            .totals
-            .iter()
-            .position(|item| item.token_index == token_index);
-        require!(result != None, ContributorError::InvalidTokenIndex);
-        Ok(result.unwrap())
+    pub fn block_contributions(&mut self) {
+        msg!(
+            "contributions are blocked for sale {}",
+            hex::encode(&self.id)
+        );
+        self.sale_token_mint = Pubkey::new_from_array([0u8; 32]);
+        self.sale_token_ata = Pubkey::new_from_array([0u8; 32]);
+        self.contributions_blocked = true;
+    }
+
+    pub fn is_blocked_contributions(&self) -> bool {
+        self.contributions_blocked
     }
 
     pub fn allocation_unlocked(&self, block_time: i64) -> bool {

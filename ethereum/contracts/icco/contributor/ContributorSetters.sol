@@ -15,6 +15,14 @@ contract ContributorSetters is ContributorState, Context {
         _state.owner = owner_;
     }
 
+    function setPendingOwner(address newOwner) internal {
+        _state.pendingOwner = newOwner;
+    }
+
+    function setNewAuthority(uint256 saleId, address newAuthority) internal {
+        _state.sales[saleId].authority = newAuthority;
+    }
+
     function setChainId(uint16 chainId) internal {
         _state.provider.chainId = chainId;
     }
@@ -33,7 +41,7 @@ contract ContributorSetters is ContributorState, Context {
 
     function setTokenBridge(address tb) internal {
         _state.provider.tokenBridge = payable(tb);
-    }
+    } 
 
     function setConsistencyLevel(uint8 level) internal {
         _state.consistencyLevel = level;

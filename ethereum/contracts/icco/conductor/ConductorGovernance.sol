@@ -22,14 +22,14 @@ contract ConductorGovernance is ConductorGetters, ConductorSetters, ERC1967Upgra
 
     /// @dev registerChain serves to save Contributor contract addresses in Conductor state
     function registerChain(uint16 contributorChainId, bytes32 contributorAddress) public onlyOwner {
-        require(contributorAddress != bytes32(0), "address not valid");
-        require(contributorContracts(contributorChainId) == bytes32(0), "chain already registered");
+        require(contributorAddress != bytes32(0), "1");
+        require(contributorContracts(contributorChainId) == bytes32(0), "2");
         setContributor(contributorChainId, contributorAddress);
     }   
 
     /// @dev upgrade serves to upgrade contract implementations
     function upgrade(uint16 conductorChainId, address newImplementation) public onlyOwner {
-        require(conductorChainId == chainId(), "wrong chain id");
+        require(conductorChainId == chainId(), "3");
 
         address currentImplementation = _getImplementation();
 
@@ -45,8 +45,8 @@ contract ConductorGovernance is ConductorGetters, ConductorSetters, ERC1967Upgra
 
     /// @dev updateConsisencyLevel serves to change the wormhole messaging consistencyLevel
     function updateConsistencyLevel(uint16 conductorChainId, uint8 newConsistencyLevel) public onlyOwner {
-        require(conductorChainId == chainId(), "wrong chain id");
-        require(newConsistencyLevel > 0, "newConsistencyLevel must be > 0");
+        require(conductorChainId == chainId(), "4");
+        require(newConsistencyLevel > 0, "5");
 
         uint8 currentConsistencyLevel = consistencyLevel();
 
@@ -55,20 +55,40 @@ contract ConductorGovernance is ConductorGetters, ConductorSetters, ERC1967Upgra
         emit ConsistencyLevelUpdated(currentConsistencyLevel, newConsistencyLevel);
     }
 
-    /// @dev transferOwnership serves to change the ownership of the Conductor contract
-    function transferOwnership(uint16 conductorChainId, address newOwner) public onlyOwner {
-        require(conductorChainId == chainId(), "wrong chain id"); 
-        require(newOwner != address(0), "new owner cannot be the zero address");
+    /**
+     * @dev submitOwnershipTransferRequest serves to begin the ownership transfer process of the contracts
+     * - it saves an address for the new owner in the pending state
+     */
+    function submitOwnershipTransferRequest(uint16 conductorChainId, address newOwner) public onlyOwner {
+        require(conductorChainId == chainId(), "6");
+        require(newOwner != address(0), "7");
 
+        setPendingOwner(newOwner); 
+    }
+
+    /**
+     * @dev confirmOwnershipTransferRequest serves to finalize an ownership transfer
+     * - it checks that the caller is the pendingOwner to validate the wallet address
+     * - it updates the owner state variable with the pendingOwner state variable
+     */
+    function confirmOwnershipTransferRequest() public {
+        /// cache the new owner address
+        address newOwner = pendingOwner();
+
+        require(msg.sender == newOwner, "8");
+
+        /// cache currentOwner for Event
         address currentOwner = owner();
-        
-        setOwner(newOwner);
 
-        emit OwnershipTransfered(currentOwner, newOwner);
+        /// @dev update the owner in the contract state and reset the pending owner
+        setOwner(newOwner);
+        setPendingOwner(address(0));
+
+        emit OwnershipTransfered(currentOwner, newOwner); 
     }
 
     modifier onlyOwner() {
-        require(owner() == _msgSender(), "caller is not the owner");
+        require(owner() == _msgSender(), "9");
         _;
     }
 }

@@ -15,6 +15,10 @@ contract ContributorGetters is ContributorState {
         return _state.owner;
     }
 
+    function pendingOwner() public view returns (address) {
+        return _state.pendingOwner;
+    }
+
     function authority(uint256 saleId_) public view returns (address) {
         return _state.sales[saleId_].authority;
     }
@@ -104,5 +108,9 @@ contract ContributorGetters is ContributorState {
 
     function excessContributionIsClaimed(uint256 saleId, uint256 tokenIndex, address contributor) public view returns (bool){
         return _state.excessContributionIsClaimed[saleId][tokenIndex][contributor];
+    }
+
+    function isTokenDisabled(uint256 saleId, uint256 tokenIndex) public view returns (bool) {
+        return _state.sales[saleId].disabledAcceptedTokens[tokenIndex];
     }
 }

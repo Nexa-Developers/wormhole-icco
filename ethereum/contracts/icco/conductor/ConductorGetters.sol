@@ -15,6 +15,10 @@ contract ConductorGetters is ConductorState {
         return _state.owner;
     } 
 
+    function pendingOwner() public view returns (address) {
+        return _state.pendingOwner;
+    } 
+
     function isInitialized(address impl) public view returns (bool) {
         return _state.initializedImplementations[impl];
     }
@@ -39,14 +43,10 @@ contract ConductorGetters is ConductorState {
         return _state.contributorImplementations[chainId_];
     }
 
-    function solanaWallet(uint256 saleId_) public view returns (bytes32) {
-        return _state.sales[saleId_].solanaTokenAccount;
-    }
-
     function contributorWallets(uint256 saleId_, uint16 chainId_) public view returns (bytes32) {
         /// @dev Solana chainID == 1
         if (chainId_ == 1) {
-            return solanaWallet(saleId_); 
+            return _state.sales[saleId_].solanaTokenAccount;
         } else {
             return contributorContracts(chainId_);
         }
