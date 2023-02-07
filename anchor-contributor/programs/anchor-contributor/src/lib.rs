@@ -727,6 +727,11 @@ pub mod anchor_contributor {
         let sale = &ctx.accounts.sale;
         require!(sale.is_sealed(), ContributorError::SaleNotSealed);
 
+        // when sale is vested so we will not allow claiming allocations.
+        require!(
+            !sale.is_vested(),
+            ContributorError::SaleIsVested
+        );
         let clock = Clock::get()?;
         require!(
             sale.allocation_unlocked(clock.unix_timestamp),

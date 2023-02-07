@@ -66,6 +66,8 @@ pub struct Sale {
     pub sale_token_mint: Pubkey, // 32   Solana Native or wrapped.
     pub sale_token_ata: Pubkey,  // 32
     pub contributions_blocked: bool, // 1 Bad sale token mint address.
+    pub is_vested: bool,             // 1
+    pub vesting_contract_mint: Pubkey, // 32
 }
 
 impl SaleTimes {
@@ -229,6 +231,8 @@ impl Sale {
         self.status = SaleStatus::Active;
         self.contributions_blocked = false;
 
+        self.is_vested = if payload[INDEX_SALE_INIT_IS_VESTED] == 1  { true } else { false };
+        
         Ok(())
     }
 
@@ -462,6 +466,9 @@ impl Sale {
         return self.initialized && self.status == SaleStatus::Sealed;
     }
 
+    pub fn is_vested(&self) -> bool {
+        return self.is_vested && self.status == SaleStatus::Sealed;
+    }
     pub fn is_aborted(&self) -> bool {
         return self.initialized && self.status == SaleStatus::Aborted;
     }

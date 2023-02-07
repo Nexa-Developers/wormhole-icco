@@ -89,6 +89,9 @@ pub enum ContributorError {
     #[msg("SaleNotSealed")]
     SaleNotSealed,
 
+    #[msg("SaleIsVested")]
+    SaleIsVested,
+
     #[msg("SaleTokenNotAttested")]
     SaleTokenNotAttested,
 
