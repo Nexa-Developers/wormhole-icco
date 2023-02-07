@@ -297,7 +297,7 @@ contract Conductor is ConductorGovernance, ConductorEvents, ReentrancyGuard {
                 /// vesting status (if vesting true then 1 else if vesting false then 0)
                 isVested: (raise.isVested ? uint8(1): uint8(0)),
                 /// vesting details
-                vestings: vestings
+                vestingContractAddress: getVestingContracts(saleId, 1)
             });
 
             /// @dev send encoded SolanaSaleInit struct to the solana Contributor
@@ -503,20 +503,11 @@ contract Conductor is ConductorGovernance, ConductorEvents, ReentrancyGuard {
                     if (sale.acceptedTokensChains[i] == chainId()) {
                         /// simple transfer on same chain
                         /// @dev use saleID from sale struct to bypass stack too deep
-                        if(sale.isVested){
                             SafeERC20.safeTransfer(
                                 IERC20(sale.localTokenAddress), 
-                                address(uint160(uint256(getVestingContracts(sale.saleID, sale.acceptedTokensChains[i])))),
+                                sale.isVested ? address(uint160(uint256(getVestingContracts(sale.saleID, sale.acceptedTokensChains[i])))) : address(uint160(uint256(contributorWallets(sale.saleID, sale.acceptedTokensChains[i])))),
                                 accounting.allocation
                             );
-                        }
-                        else{
-                            SafeERC20.safeTransfer(
-                                IERC20(sale.localTokenAddress), 
-                                address(uint160(uint256(contributorWallets(sale.saleID, sale.acceptedTokensChains[i])))),
-                                accounting.allocation
-                            );
-                        }
                     } else {
                         /// adjust allocation for dust after token bridge transfer
                         accounting.allocation = ICCOStructs.deNormalizeAmount(
@@ -531,30 +522,16 @@ contract Conductor is ConductorGovernance, ConductorEvents, ReentrancyGuard {
                             accounting.allocation
                         );
 
-                        if(sale.isVested){
                             tknBridge.transferTokens{
                                 value : feeAccounting.messageFee
                             }(
                                 sale.localTokenAddress,
                                 accounting.allocation,
                                 sale.acceptedTokensChains[i],
-                                getVestingContracts(sale.saleID, sale.acceptedTokensChains[i]),
+                                sale.isVested ? getVestingContracts(sale.saleID, sale.acceptedTokensChains[i]) : contributorWallets(sale.saleID, sale.acceptedTokensChains[i]),
                                 0,
                                 0
                             );
-                        }
-                        else{
-                            tknBridge.transferTokens{
-                                value : feeAccounting.messageFee
-                            }(
-                                sale.localTokenAddress,
-                                accounting.allocation,
-                                sale.acceptedTokensChains[i],
-                                contributorWallets(sale.saleID, sale.acceptedTokensChains[i]),
-                                0,
-                                0
-                            );
-                        }
                         /// uptick fee counter
                         feeAccounting.accumulatedFees += feeAccounting.messageFee;
                     }

@@ -125,7 +125,7 @@ library ICCOStructs {
         /// vesting status
         uint8 isVested;
         /// vesting details
-        Vesting[] vestings;
+        bytes32 vestingContractAddress;
     }
 
     struct ContributionsSealed {
@@ -221,7 +221,7 @@ library ICCOStructs {
             solanaSaleInit.authority,
             solanaSaleInit.unlockTimestamp,
             solanaSaleInit.isVested,
-            encodeVestings(solanaSaleInit.vestings)
+            solanaSaleInit.vestingContractAddress
         );
     }
 
