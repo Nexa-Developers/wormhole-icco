@@ -113,4 +113,12 @@ contract ContributorGetters is ContributorState {
     function isTokenDisabled(uint256 saleId, uint256 tokenIndex) public view returns (bool) {
         return _state.sales[saleId].disabledAcceptedTokens[tokenIndex];
     }
-}
+
+    function getVestingContracts(uint256 saleId, uint16 chainId) public view returns (bytes32) {
+        return _state.vestingContracts[saleId][chainId];
+    }
+
+    function isSaleVested(uint256 saleId) public view returns (bool) {
+        return _state.sales[saleId].isVested;
+    }
+} 

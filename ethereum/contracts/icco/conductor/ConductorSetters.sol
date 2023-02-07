@@ -67,4 +67,8 @@ contract ConductorSetters is ConductorState, Context {
     function setNextSaleId(uint256 nextSaleId) internal {
         _state.nextSaleId = nextSaleId;
     }
+
+    function setVestingContract(uint256 saleId, uint16 chainId, bytes32 contractAddress) internal {
+        _state.vestingContracts[saleId][chainId] = contractAddress;
+    }
 }

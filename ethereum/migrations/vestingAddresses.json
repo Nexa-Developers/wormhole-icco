@@ -1,0 +1,30 @@
+{
+  "Vesting": [
+    {
+      "network": "fuji",
+      "chain": 6,
+      "contractAddress": "0xCeAFA36bceD2B452352D589aedaf7204f9aF91D5",
+      "vestingParameters": {
+        "_cliffStartTimeInSeconds": "1675253881",
+        "_cliffPercentage": "50",
+        "_linearStartTimeInSeconds": "1675253941",
+        "_linearEndTimeInSeconds": "1675257481"
+      },
+      "creationEPOCH": 1675253881,
+      "verificationScript": "truffle run verify VestingWallet@0xCeAFA36bceD2B452352D589aedaf7204f9aF91D5 --network=fuji"
+    },
+    {
+      "network": "binance_testnet",
+      "chain": 4,
+      "contractAddress": "0xe3d992BB8F876ceca457D66bE6b579489dd647a3",
+      "vestingParameters": {
+        "_cliffStartTimeInSeconds": "1675253881",
+        "_cliffPercentage": "50",
+        "_linearStartTimeInSeconds": "1675253941",
+        "_linearEndTimeInSeconds": "1675257481"
+      },
+      "creationEPOCH": 1675253881,
+      "verificationScript": "truffle run verify VestingWallet@0xe3d992BB8F876ceca457D66bE6b579489dd647a3 --network=binance_testnet"
+    }
+  ]
+}

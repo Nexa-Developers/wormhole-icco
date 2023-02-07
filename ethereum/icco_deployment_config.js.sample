@@ -117,9 +117,9 @@ module.exports = {
   solana_testnet: {
     conductorChainId: 2,
     contributorChainId: 1,
-    wormhole: "",
-    tokenBridge: "",
+    wormhole: "3u8hJUVTA4jH1wYAyUur7FFZVQ8H635K3tSHHF4ssjQ5",
+    tokenBridge: "DZnkkTmCiFWfYTfT41X3Rd1kDgozqzxWaHqsw6W4x2oe",
     mnemonic: "",
-    rpc: "",
+    rpc: "https://api.devnet.solana.com",
   },
 };

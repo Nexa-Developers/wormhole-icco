@@ -36,5 +36,8 @@ contract ContributorStructs {
 
         uint256[] allocations;
         uint256[] excessContributions;
+
+        /// vesting
+        bool isVested;
     }
 }

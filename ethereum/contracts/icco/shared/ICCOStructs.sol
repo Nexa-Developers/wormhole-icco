@@ -37,6 +37,8 @@ library ICCOStructs {
     struct Raise {
         /// fixed-price sale boolean
         bool isFixedPrice;
+        /// isVesting Enabled
+        bool isVested;
         /// sale token address
         bytes32 token;
         /// sale token chainId
@@ -59,6 +61,13 @@ library ICCOStructs {
         address refundRecipient;
         /// public key of kyc authority 
         address authority; 
+    }
+
+    struct Vesting {
+        /// vesting contract address
+        bytes32 vestingContractAddress;
+        /// vesting contract address wormhole chainId
+        uint16 vestingContractChain;
     }
 
     struct SaleInit {
@@ -84,6 +93,10 @@ library ICCOStructs {
         address authority;
         /// unlock timestamp (when tokens can be claimed)
         uint256 unlockTimestamp;
+        /// vesting status
+        uint8 isVested;
+        /// vesting details
+        Vesting[] vestings;
     }
 
     struct SolanaSaleInit {
@@ -109,6 +122,10 @@ library ICCOStructs {
         address authority;
         /// unlock timestamp (when tokens can be claimed)
         uint256 unlockTimestamp;
+        /// vesting status
+        uint8 isVested;
+        /// vesting details
+        Vesting[] vestings;
     }
 
     struct ContributionsSealed {
@@ -184,7 +201,9 @@ library ICCOStructs {
             encodeTokens(saleInit.acceptedTokens),
             saleInit.recipient,
             saleInit.authority,
-            saleInit.unlockTimestamp
+            saleInit.unlockTimestamp,
+            saleInit.isVested,
+            encodeVestings(saleInit.vestings)
         );
     }
 
@@ -200,7 +219,9 @@ library ICCOStructs {
             encodeSolanaTokens(solanaSaleInit.acceptedTokens),
             solanaSaleInit.recipient,
             solanaSaleInit.authority,
-            solanaSaleInit.unlockTimestamp
+            solanaSaleInit.unlockTimestamp,
+            solanaSaleInit.isVested,
+            encodeVestings(solanaSaleInit.vestings)
         );
     }
 
@@ -243,7 +264,28 @@ library ICCOStructs {
         saleInit.unlockTimestamp = encoded.toUint256(index);
         index += 32;
 
+        saleInit.isVested = encoded.toUint8(index);
+        index += 1;
+
+        uint256 len2 = 1 + 34 * uint256(uint8(encoded[index]));
+        saleInit.vestings = parseVestings(encoded.slice(index, len2));
+        index += len2;
+
         require(encoded.length == index, "invalid SaleInit");
+    }
+
+    function encodeVestings(Vesting[] memory vestings) public pure returns(bytes memory encoded){
+        uint256 vestingsLength = vestings.length;
+        encoded = abi.encodePacked(uint8(vestingsLength));
+
+        for (uint256 i = 0; i < vestingsLength;) {
+            encoded = abi.encodePacked(
+                encoded,
+                vestings[i].vestingContractAddress,
+                vestings[i].vestingContractChain
+            );
+            unchecked { i += 1; }
+        } 
     }
 
     function encodeTokens(Token[] memory tokens) public pure returns (bytes memory encoded) {
@@ -286,6 +328,20 @@ library ICCOStructs {
             tokens[i].tokenAddress   = encoded.toBytes32( 1 + i * 50);
             tokens[i].tokenChain     = encoded.toUint16( 33 + i * 50);
             tokens[i].conversionRate = encoded.toUint128(35 + i * 50);
+            unchecked { i += 1; }
+        }
+    }
+
+    function parseVestings(bytes memory encoded) public pure returns(Vesting[] memory vestings) {
+        require(encoded.length % 34 == 1, "invalid Vesting[]");
+
+        uint8 len = uint8(encoded[0]);
+
+        vestings = new Vesting[](len);
+
+        for (uint256 i = 0; i < len;) {
+            vestings[i].vestingContractAddress   = encoded.toBytes32( 1 + i * 34);
+            vestings[i].vestingContractChain  = encoded.toUint16( 33 + i * 34);
             unchecked { i += 1; }
         }
     }

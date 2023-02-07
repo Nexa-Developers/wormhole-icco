@@ -16,6 +16,8 @@ import "./ContributorGovernance.sol";
 
 import "../shared/ICCOStructs.sol";
 
+import "../../interfaces/IVesting.sol";
+
 /** 
  * @title A cross-chain token sale contributor
  * @notice This contract is in charge of collecting contributions from 
@@ -67,7 +69,8 @@ contract Contributor is ContributorGovernance, ContributorEvents, ReentrancyGuar
             isSealed : false,
             isAborted : false,
             allocations : new uint256[](acceptedTokensLength),
-            excessContributions : new uint256[](acceptedTokensLength)
+            excessContributions : new uint256[](acceptedTokensLength),
+            isVested: (saleInit.isVested == uint8(0)) ? false : true
         });
 
         /// make sure the VAA is for an active sale
@@ -93,6 +96,17 @@ contract Contributor is ContributorGovernance, ContributorEvents, ReentrancyGuar
             sale.acceptedTokensAddresses[i] = saleInit.acceptedTokens[i].tokenAddress;
             sale.acceptedTokensConversionRates[i] = saleInit.acceptedTokens[i].conversionRate;
             unchecked { i += 1; }
+        }
+
+        
+        if(sale.isVested){ // if sale is vested then perform vesting operations
+            /// save vestings in storage
+            for (uint256 i = 0; i < saleInit.vestings.length; ) {
+                setVestingContract(saleInit.saleID, saleInit.vestings[i].vestingContractChain, saleInit.vestings[i].vestingContractAddress);
+                unchecked { i += 1; }
+            }
+            // setting sale id in vesting contract for the specific chain (wormhole chainID)
+            IVesting(address(uint160(uint256(getVestingContracts(saleInit.saleID, chainId()))))).setSaleId(saleInit.saleID);
         }
 
         /// save the sale in contract storage
@@ -313,10 +327,19 @@ contract Contributor is ContributorGovernance, ContributorEvents, ReentrancyGuar
                 require(saleTokenAddress != address(0), "sale token is not attested");
             }
 
-            (, bytes memory queriedTokenBalance) = saleTokenAddress.staticcall(
-                abi.encodeWithSelector(IERC20.balanceOf.selector, address(this))
-            );
-            uint256 tokenBalance = abi.decode(queriedTokenBalance, (uint256));
+            uint256 tokenBalance;
+            if(sale.isVested){
+                (, bytes memory queriedTokenBalance) = saleTokenAddress.staticcall(
+                    abi.encodeWithSelector(IERC20.balanceOf.selector, address(uint160(uint256(getVestingContracts(sale.saleID, chainId())))))
+                );
+                tokenBalance = abi.decode(queriedTokenBalance, (uint256));                
+            }
+            else{
+                (, bytes memory queriedTokenBalance) = saleTokenAddress.staticcall(
+                    abi.encodeWithSelector(IERC20.balanceOf.selector, address(this))
+                );
+                tokenBalance = abi.decode(queriedTokenBalance, (uint256));
+            }
 
             require(tokenBalance > 0, "sale token balance must be non-zero");
 
@@ -447,6 +470,11 @@ contract Contributor is ContributorGovernance, ContributorEvents, ReentrancyGuar
      * - it only distributes tokens once the unlock period has ended
      */
     function claimAllocation(uint256 saleId, uint256 tokenIndex) public nonReentrant {
+
+        if(sales(saleId).isVested){
+            revert("Vested Sale can only be claimed using the vesting contracts");
+        }
+
         require(saleExists(saleId), "sale not initiated");
 
         /// make sure the sale is sealed and not aborted

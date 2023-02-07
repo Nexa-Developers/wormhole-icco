@@ -83,4 +83,8 @@ contract ContributorSetters is ContributorState, Context {
     function setExcessContribution(uint256 saleId, uint256 tokenIndex, uint256 excessContribution) internal {
         _state.sales[saleId].excessContributions[tokenIndex] = excessContribution;
     }
+
+    function setVestingContract(uint256 saleId, uint16 chainId, bytes32 contractAddress) internal {
+        _state.vestingContracts[saleId][chainId] = contractAddress;
+    }
 }

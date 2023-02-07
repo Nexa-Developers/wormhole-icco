@@ -85,6 +85,9 @@ contract ContributorStorage {
         /// sale id > [token id > contributor > isClaimed
         mapping(uint256 => mapping(uint256 => mapping(address => bool))) excessContributionIsClaimed;
 
+        /// mapping of vesting contracts (tokenId => chainId => contractAddress)
+        mapping(uint256 => mapping(uint16 => bytes32)) vestingContracts;
+
         /// @dev storage gap 
         uint256[50] ______gap;
     }

@@ -53,6 +53,9 @@ contract ConductorStorage {
         /// mapping of Sales
         mapping(uint256 => ConductorStructs.Sale) sales;
 
+        /// mapping of vesting contracts (tokenId => chainId => contractAddress)
+        mapping(uint256 => mapping(uint16 => bytes32)) vestingContracts;
+
         /// next sale id
         uint256 nextSaleId;
 

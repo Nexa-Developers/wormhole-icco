@@ -67,4 +67,8 @@ contract ConductorGetters is ConductorState {
     function saleContributions(uint256 saleId_) public view returns (uint256[] memory) {
         return _state.sales[saleId_].contributions;
     }
+
+    function getVestingContracts(uint256 saleId, uint16 chainId) public view returns (bytes32) {
+        return _state.vestingContracts[saleId][chainId];
+    }
 }

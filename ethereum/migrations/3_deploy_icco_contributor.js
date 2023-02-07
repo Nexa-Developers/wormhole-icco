@@ -9,6 +9,7 @@ const ethereumRootPath = `${__dirname}/..`;
 const DeploymentConfig = require(`${ethereumRootPath}/icco_deployment_config.js`);
 
 const fs = require("fs");
+const path = require("path");
 
 module.exports = async function(deployer, network) {
   const config = DeploymentConfig[network];
@@ -80,6 +81,34 @@ module.exports = async function(deployer, network) {
       ContributorSetup.address,
       contributorInitData
     );
+  }
+
+  // saves in all cases fresh deployments
+  if (!config.deployImplementationOnly) {
+    const fp = path.join(__dirname, "deployedAddresses.json");
+    const contents = fs.existsSync(fp)
+      ? JSON.parse(fs.readFileSync(fp, "utf8"))
+      : { conductor: {}, contributor: [] };
+    const contributor = {
+      contributorNetwork: network,
+      contributorChain: parseInt(config.contributorChainId),
+      contributorAddress: TokenSaleContributor.address,
+      contributorContracts: {
+        ICCOStructs: ICCOStructs.address,
+        ContributorImplementation: ContributorImplementation.address,
+        ContributorSetup: ContributorSetup.address,
+        TokenSaleContributor: TokenSaleContributor.address,
+      },
+      verificationString: {
+        ICCOStructs: `truffle run verify ICCOStructs@${ICCOStructs.address} --network=${network}`,
+        ContributorImplementation: `truffle run verify ContributorImplementation@${ContributorImplementation.address} --network=${network}`,
+        ContributorSetup: `truffle run verify ContributorSetup@${ContributorSetup.address} --network=${network}`,
+        TokenSaleContributor: `truffle run verify TokenSaleContributor@${TokenSaleContributor.address} --network=${network}`,
+      },
+    };
+    contents.contributor.push(contributor);
+
+    fs.writeFileSync(fp, JSON.stringify(contents, null, 2), "utf8");
   }
 
   // cache address for registration purposes

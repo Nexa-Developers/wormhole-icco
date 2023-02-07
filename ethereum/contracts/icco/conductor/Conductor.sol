@@ -102,7 +102,8 @@ contract Conductor is ConductorGovernance, ConductorEvents, ReentrancyGuard {
      */
     function createSale(
         ICCOStructs.Raise memory raise,
-        ICCOStructs.Token[] memory acceptedTokens   
+        ICCOStructs.Token[] memory acceptedTokens,
+        ICCOStructs.Vesting[] memory vestings
     ) public payable nonReentrant returns (
         uint256 saleId,
         uint256 wormholeSequence,
@@ -177,7 +178,9 @@ contract Conductor is ConductorGovernance, ConductorEvents, ReentrancyGuard {
             /// sale identifiers
             isSealed :  false,
             isAborted : false,
-            isFixedPrice : raise.isFixedPrice
+            isFixedPrice : raise.isFixedPrice,
+            /// vesting
+            isVested: raise.isVested
         });
 
         /// populate the accepted token arrays
@@ -215,6 +218,14 @@ contract Conductor is ConductorGovernance, ConductorEvents, ReentrancyGuard {
             unchecked { i += 1; }
         }
 
+        if(sale.isVested){
+            require(vestings.length > 0, "47");
+            for (uint256 i = 0; i < vestings.length;) {
+                setVestingContract(saleId, vestings[i].vestingContractChain, vestings[i].vestingContractAddress);
+                unchecked { i += 1; }
+            }
+        }
+
         /// save number of accepted solana tokens in the sale
         sale.solanaAcceptedTokensCount = uint8(_state.solanaAcceptedTokens.length);
 
@@ -243,7 +254,11 @@ contract Conductor is ConductorGovernance, ConductorEvents, ReentrancyGuard {
             /// public key of kyc authority 
             authority : raise.authority,
             /// unlock timestamp (when tokens can be claimed)
-            unlockTimestamp : raise.unlockTimestamp
+            unlockTimestamp : raise.unlockTimestamp,
+            /// vesting status (if vesting true then 1 else if vesting false then 0)
+            isVested: (raise.isVested ? uint8(1): uint8(0)),
+            /// vesting details
+            vestings: vestings
         }); 
 
         /// @dev send encoded SaleInit struct to Contributors via wormhole.        
@@ -278,7 +293,11 @@ contract Conductor is ConductorGovernance, ConductorEvents, ReentrancyGuard {
                 /// public key of kyc authority 
                 authority: raise.authority,
                 /// unlock timestamp (when tokens can be claimed)
-                unlockTimestamp : raise.unlockTimestamp
+                unlockTimestamp : raise.unlockTimestamp,
+                /// vesting status (if vesting true then 1 else if vesting false then 0)
+                isVested: (raise.isVested ? uint8(1): uint8(0)),
+                /// vesting details
+                vestings: vestings
             });
 
             /// @dev send encoded SolanaSaleInit struct to the solana Contributor
@@ -484,11 +503,20 @@ contract Conductor is ConductorGovernance, ConductorEvents, ReentrancyGuard {
                     if (sale.acceptedTokensChains[i] == chainId()) {
                         /// simple transfer on same chain
                         /// @dev use saleID from sale struct to bypass stack too deep
-                        SafeERC20.safeTransfer(
-                            IERC20(sale.localTokenAddress), 
-                            address(uint160(uint256(contributorWallets(sale.saleID, sale.acceptedTokensChains[i])))),
-                            accounting.allocation
-                        );
+                        if(sale.isVested){
+                            SafeERC20.safeTransfer(
+                                IERC20(sale.localTokenAddress), 
+                                address(uint160(uint256(getVestingContracts(sale.saleID, sale.acceptedTokensChains[i])))),
+                                accounting.allocation
+                            );
+                        }
+                        else{
+                            SafeERC20.safeTransfer(
+                                IERC20(sale.localTokenAddress), 
+                                address(uint160(uint256(contributorWallets(sale.saleID, sale.acceptedTokensChains[i])))),
+                                accounting.allocation
+                            );
+                        }
                     } else {
                         /// adjust allocation for dust after token bridge transfer
                         accounting.allocation = ICCOStructs.deNormalizeAmount(
@@ -503,17 +531,30 @@ contract Conductor is ConductorGovernance, ConductorEvents, ReentrancyGuard {
                             accounting.allocation
                         );
 
-                        tknBridge.transferTokens{
-                            value : feeAccounting.messageFee
-                        }(
-                            sale.localTokenAddress,
-                            accounting.allocation,
-                            sale.acceptedTokensChains[i],
-                            contributorWallets(sale.saleID, sale.acceptedTokensChains[i]),
-                            0,
-                            0
-                        );
-
+                        if(sale.isVested){
+                            tknBridge.transferTokens{
+                                value : feeAccounting.messageFee
+                            }(
+                                sale.localTokenAddress,
+                                accounting.allocation,
+                                sale.acceptedTokensChains[i],
+                                getVestingContracts(sale.saleID, sale.acceptedTokensChains[i]),
+                                0,
+                                0
+                            );
+                        }
+                        else{
+                            tknBridge.transferTokens{
+                                value : feeAccounting.messageFee
+                            }(
+                                sale.localTokenAddress,
+                                accounting.allocation,
+                                sale.acceptedTokensChains[i],
+                                contributorWallets(sale.saleID, sale.acceptedTokensChains[i]),
+                                0,
+                                0
+                            );
+                        }
                         /// uptick fee counter
                         feeAccounting.accumulatedFees += feeAccounting.messageFee;
                     }
