@@ -103,6 +103,20 @@
         "ContributorSetup": "truffle run verify ContributorSetup@0x2806Dc8a19eb1C5336e0EF1a06d320dCA08976c1 --network=goerli",
         "TokenSaleContributor": "truffle run verify TokenSaleContributor@0x9bb291d017729c68300882c334CbdcBDF6519dF2 --network=goerli"
       }
+    },
+    {
+      "contributorNetwork": "solana_devnet",
+      "contributorChain": 1,
+      "contributorAddress": "CM4U5AKUrEogENUuXVEMEP5Jf93D5U39sGvZJXFpDADF",
+      "contributorAddressBytes32": "0x88c96114091820b91b84c41ffef09804a878d594c2c58f08c205cbf8dbaf83f7",
+      "contributorContracts": {
+        "wormhole": "3u8hJUVTA4jH1wYAyUur7FFZVQ8H635K3tSHHF4ssjQ5",
+        "token_bridge": "DZnkkTmCiFWfYTfT41X3Rd1kDgozqzxWaHqsw6W4x2oe",
+        "programid": "CM4U5AKUrEogENUuXVEMEP5Jf93D5U39sGvZJXFpDADF",
+        "payer": "6r8RtH8qodE3NTjrPfh5TbKR4C1Ee1bn98FdE8K99yXy",
+        "tx": "4vZ7yzPR39oNqQVXKZ1rAANdqWS3k5fSbFgyincT8Zm9hQDAYJmepdPbCEU8QeHnmrGhC7WoFqez9HFF8tfpjUpW",
+        "custodian": "7bjnpqcoQorJUtxYGXUBB3ZMYTQvPReiZv88JtpmgNpQ"
+      }
     }
   ]
 }

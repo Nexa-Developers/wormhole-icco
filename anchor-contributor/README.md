@@ -42,4 +42,9 @@ any of the provided scripts, you can run `. unset.env` to unset all these variab
 
 ## Deploy Solana Contributor
 
-run anchor build it will give you a deploy command. Before doing that, you need to run `anchor keys list`. It gives a programId. Copy that value and put it in lib.rs `declare_id`. anchor build again and then run the deploy command.
+change `env.rs` file and set your required conductors and bridge addresses
+run `anchor build`
+run `anchor keys list`
+use the `programId` and copy that value and put it in lib.rs `declare_id` 
+run `anchor build`
+run last two commands provided in `deploy-devnet.sh` file
