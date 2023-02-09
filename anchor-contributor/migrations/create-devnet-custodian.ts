@@ -3,8 +3,8 @@ import { web3 } from "@project-serum/anchor";
 import { IccoContributor } from "../tests/helpers/contributor";
 import { connectToContributorProgram, readJson, readKeypair } from "./utils";
 
-const CORE_BRIDGE_ADDRESS = new web3.PublicKey(process.env.CORE_BRIDGE_ADDRESS);
-const TOKEN_BRIDGE_ADDRESS = new web3.PublicKey(process.env.TOKEN_BRIDGE_ADDRESS);
+const CORE_BRIDGE_ADDRESS = new web3.PublicKey("3u8hJUVTA4jH1wYAyUur7FFZVQ8H635K3tSHHF4ssjQ5");
+const TOKEN_BRIDGE_ADDRESS = new web3.PublicKey("DZnkkTmCiFWfYTfT41X3Rd1kDgozqzxWaHqsw6W4x2oe");
 
 async function main() {
   const rpc = "https://api.devnet.solana.com";

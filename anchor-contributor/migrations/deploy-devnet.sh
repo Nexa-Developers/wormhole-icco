@@ -5,6 +5,7 @@ set -euo pipefail
 solana config set --url devnet
 
 # WALLET must be set
+WALLET="C:\Users\wasif\.config\solana\id.json"
 ls $WALLET
 
 # and PROGRAM_ID
