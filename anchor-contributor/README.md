@@ -39,3 +39,7 @@ WALLET=path/to/your/key.json yarn run deploy-devnet
 We manage compile-time constants with environment variables found in `test.env` and `devnet.env`. When it comes time
 to deploy to mainnet, make a corresponding `mainnet.env` file. If you inadvertently source these files outside of
 any of the provided scripts, you can run `. unset.env` to unset all these variables.
+
+## Deploy Solana Contributor
+
+run anchor build it will give you a deploy command. Before doing that, you need to run `anchor keys list`. It gives a programId. Copy that value and put it in lib.rs `declare_id`. anchor build again and then run the deploy command.
