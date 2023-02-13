@@ -1,0 +1,69 @@
+{
+  "Vesting": [
+    {
+      "network": "fuji",
+      "chain": 6,
+      "contractAddress": "0xdEba43d17d91546Bd7a6099456682C3087008a98",
+      "vestingParameters": {
+        "_cliffStartTimeInSeconds": "1676275839",
+        "_cliffPercentage": "50",
+        "_linearStartTimeInSeconds": "1676279439",
+        "_linearEndTimeInSeconds": "1676362239"
+      },
+      "creationEPOCH": 1676275839,
+      "verificationScript": "truffle run verify VestingWallet@0xdEba43d17d91546Bd7a6099456682C3087008a98 --network=fuji"
+    },
+    {
+      "network": "binance_testnet",
+      "chain": 4,
+      "contractAddress": "0xD72CAEa2897Ae4D486FcE5baf5a0F08eA1Ae82B0",
+      "vestingParameters": {
+        "_cliffStartTimeInSeconds": "1676275914",
+        "_cliffPercentage": "50",
+        "_linearStartTimeInSeconds": "1676279514",
+        "_linearEndTimeInSeconds": "1676362314"
+      },
+      "creationEPOCH": 1676275914,
+      "verificationScript": "truffle run verify VestingWallet@0xD72CAEa2897Ae4D486FcE5baf5a0F08eA1Ae82B0 --network=binance_testnet"
+    },
+    {
+      "network": "fantom_testnet",
+      "chain": 10,
+      "contractAddress": "0x28AD62c6869cde32fc16d73e832d9Aa6C850eF97",
+      "vestingParameters": {
+        "_cliffStartTimeInSeconds": "1676275973",
+        "_cliffPercentage": "50",
+        "_linearStartTimeInSeconds": "1676279573",
+        "_linearEndTimeInSeconds": "1676362373"
+      },
+      "creationEPOCH": 1676275973,
+      "verificationScript": "truffle run verify VestingWallet@0x28AD62c6869cde32fc16d73e832d9Aa6C850eF97 --network=fantom_testnet"
+    },
+    {
+      "network": "mumbai",
+      "chain": 5,
+      "contractAddress": "0x0f888c1391E44Ad07Eca3223E90aBD9a2Ae8f8b3",
+      "vestingParameters": {
+        "_cliffStartTimeInSeconds": "1676276036",
+        "_cliffPercentage": "50",
+        "_linearStartTimeInSeconds": "1676279636",
+        "_linearEndTimeInSeconds": "1676362436"
+      },
+      "creationEPOCH": 1676276036,
+      "verificationScript": "truffle run verify VestingWallet@0x0f888c1391E44Ad07Eca3223E90aBD9a2Ae8f8b3 --network=mumbai"
+    },
+    {
+      "network": "goerli",
+      "chain": 2,
+      "contractAddress": "0x4e20F0AB384ba2a67bFf5304dC4c3db87E1C6944",
+      "vestingParameters": {
+        "_cliffStartTimeInSeconds": "1676276104",
+        "_cliffPercentage": "50",
+        "_linearStartTimeInSeconds": "1676279704",
+        "_linearEndTimeInSeconds": "1676362504"
+      },
+      "creationEPOCH": 1676276104,
+      "verificationScript": "truffle run verify VestingWallet@0x4e20F0AB384ba2a67bFf5304dC4c3db87E1C6944 --network=goerli"
+    }
+  ]
+}
