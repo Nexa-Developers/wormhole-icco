@@ -41,7 +41,9 @@ module.exports = async function(deployer, network) {
     network == "fuji" ||
     network == "binance_testnet" ||
     network == "mumbai" ||
-    network == "fantom_testnet"
+    network == "fantom_testnet" ||
+    network == "arbitrum_testnet" ||
+    network == "optimism_testnet"
   ) {
     const fp = `${ethereumRootPath}/../testnet.json`;
     conductorAddr =

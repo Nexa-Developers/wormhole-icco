@@ -117,6 +117,23 @@
         "tx": "4vZ7yzPR39oNqQVXKZ1rAANdqWS3k5fSbFgyincT8Zm9hQDAYJmepdPbCEU8QeHnmrGhC7WoFqez9HFF8tfpjUpW",
         "custodian": "7bjnpqcoQorJUtxYGXUBB3ZMYTQvPReiZv88JtpmgNpQ"
       }
+    },
+    {
+      "contributorNetwork": "arbitrum_testnet",
+      "contributorChain": 23,
+      "contributorAddress": "0x4b5d6d5b32e0ffe13207aA7048CB0A60C9128B9D",
+      "contributorContracts": {
+        "ICCOStructs": "0xC9e7627990B4ECD659545b5b8A1907C96435d87f",
+        "ContributorImplementation": "0x0Dee3fdE95226DAB4b49c0623E619D90e2AEfb3e",
+        "ContributorSetup": "0x8E945B7bf4418606EFcf793E2481283B2AA929c7",
+        "TokenSaleContributor": "0x4b5d6d5b32e0ffe13207aA7048CB0A60C9128B9D"
+      },
+      "verificationString": {
+        "ICCOStructs": "truffle run verify ICCOStructs@0xC9e7627990B4ECD659545b5b8A1907C96435d87f --network=goerli",
+        "ContributorImplementation": "truffle run verify ContributorImplementation@0x0Dee3fdE95226DAB4b49c0623E619D90e2AEfb3e --network=goerli",
+        "ContributorSetup": "truffle run verify ContributorSetup@0x8E945B7bf4418606EFcf793E2481283B2AA929c7 --network=goerli",
+        "TokenSaleContributor": "truffle run verify TokenSaleContributor@0x4b5d6d5b32e0ffe13207aA7048CB0A60C9128B9D --network=goerli"
+      }
     }
   ]
 }
