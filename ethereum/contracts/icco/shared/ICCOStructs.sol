@@ -218,8 +218,7 @@ library ICCOStructs {
             solanaSaleInit.recipient,
             solanaSaleInit.authority,
             solanaSaleInit.unlockTimestamp,
-            solanaSaleInit.isVested,
-            solanaSaleInit.vestingContractAddress
+            solanaSaleInit.isVested
         );
     }
 
