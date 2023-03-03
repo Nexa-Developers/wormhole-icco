@@ -124,8 +124,6 @@ library ICCOStructs {
         uint256 unlockTimestamp;
         /// vesting status
         uint8 isVested;
-        /// vesting details
-        bytes32 vestingContractAddress;
     }
 
     struct ContributionsSealed {

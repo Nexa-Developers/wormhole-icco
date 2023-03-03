@@ -296,8 +296,6 @@ contract Conductor is ConductorGovernance, ConductorEvents, ReentrancyGuard {
                 unlockTimestamp : raise.unlockTimestamp,
                 /// vesting status (if vesting true then 1 else if vesting false then 0)
                 isVested: (raise.isVested ? uint8(1): uint8(0)),
-                /// vesting details
-                vestingContractAddress: getVestingContracts(saleId, 1)
             });
 
             /// @dev send encoded SolanaSaleInit struct to the solana Contributor
