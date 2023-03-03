@@ -67,7 +67,6 @@ pub struct Sale {
     pub sale_token_ata: Pubkey,  // 32
     pub contributions_blocked: bool, // 1 Bad sale token mint address.
     pub is_vested: bool,             // 1
-    pub vesting_contract_mint: Pubkey, // 32
 }
 
 impl SaleTimes {
@@ -183,7 +182,8 @@ impl Sale {
                 == INDEX_SALE_INIT_ACCEPTED_TOKENS_START
                     + 1
                     + ACCEPTED_TOKEN_NUM_BYTES * num_accepted
-                    + SALE_INIT_TAIL,
+                    + SALE_INIT_TAIL
+                    + 1,
             ContributorError::InvalidVaaPayload
         );
 
