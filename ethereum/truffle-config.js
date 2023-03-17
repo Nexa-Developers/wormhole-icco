@@ -42,9 +42,7 @@ module.exports = {
           DeploymentConfig["mainnet"].mnemonic,
           DeploymentConfig["mainnet"].rpc
         ),
-      network_id: 1,
-      // gas: 10000000,
-      // gasPrice: 191000000000,
+      network_id: "1",
       networkCheckTimeout: 10000,
       timeoutBlocks: 2000,
       skipDryRun: false,
@@ -57,8 +55,6 @@ module.exports = {
         );
       },
       network_id: "5",
-      // gas: 6465030,
-      // gasPrice: 10000000000,
       networkCheckTimeout: 10000,
       timeoutBlocks: 2000,
     },
@@ -70,8 +66,6 @@ module.exports = {
         );
       },
       network_id: "56",
-      // gas: 70000000,
-      // gasPrice: 8000000000,
       networkCheckTimeout: 10000,
       timeoutBlocks: 2000,
     },
@@ -82,8 +76,6 @@ module.exports = {
           DeploymentConfig["binance_testnet"].rpc
         ),
       network_id: "97",
-      // gas: 29000000,
-      // gasPrice: 10000000000,
       networkCheckTimeout: 100000,
       timeoutBlocks: 20000,
     },
@@ -95,8 +87,6 @@ module.exports = {
         );
       },
       network_id: "137",
-      // gas: 10000000,
-      // gasPrice: 700000000000,
       networkCheckTimeout: 10000,
       timeoutBlocks: 2000,
     },
@@ -119,8 +109,6 @@ module.exports = {
         );
       },
       network_id: "43114",
-      // gas: 8000000,
-      // gasPrice: 26000000000,
       networkCheckTimeout: 10000,
       timeoutBlocks: 2000,
     },
@@ -134,6 +122,17 @@ module.exports = {
       networkCheckTimeout: 100000,
       timeoutBlocks: 20000,
     },
+    fantom: {
+      provider: () => {
+        return new HDWalletProvider(
+          DeploymentConfig["fantom"].mnemonic,
+          DeploymentConfig["fantom"].rpc
+        );
+      },
+      network_id: "250",
+      networkCheckTimeout: 100000,
+      timeoutBlocks: 20000,
+    },
     fantom_testnet: {
       provider: () => {
         return new HDWalletProvider(
@@ -142,8 +141,17 @@ module.exports = {
         );
       },
       network_id: 0xfa2,
-      // gas: 8000000,
-      // gasPrice: 30000000000,
+      networkCheckTimeout: 100000,
+      timeoutBlocks: 20000,
+    },
+    arbitrum: {
+      provider: () => {
+        return new HDWalletProvider(
+          DeploymentConfig["arbitrum"].mnemonic,
+          DeploymentConfig["arbitrum"].rpc
+        );
+      },
+      network_id: "42161",
       networkCheckTimeout: 100000,
       timeoutBlocks: 20000,
     },
@@ -154,9 +162,18 @@ module.exports = {
           DeploymentConfig["arbitrum_testnet"].rpc
         );
       },
-      network_id: 421613,
-      // gas: 3000000,
-      // gasPrice: 200000000,
+      network_id: "421613",
+      networkCheckTimeout: 100000,
+      timeoutBlocks: 20000,
+    },
+    optimism: {
+      provider: () => {
+        return new HDWalletProvider(
+          DeploymentConfig["optimism"].mnemonic,
+          DeploymentConfig["optimism"].rpc
+        );
+      },
+      network_id: "10",
       networkCheckTimeout: 100000,
       timeoutBlocks: 20000,
     },
@@ -167,9 +184,7 @@ module.exports = {
           DeploymentConfig["optimism_testnet"].rpc
         );
       },
-      network_id: 420,
-      // gas: 3000000,
-      // gasPrice: 150,
+      network_id: "420",
       networkCheckTimeout: 100000,
       timeoutBlocks: 20000,
     },
@@ -196,12 +211,18 @@ module.exports = {
     },
   },
 
-  plugins: ["@chainsafe/truffle-plugin-abigen", "truffle-plugin-verify", "truffle-contract-size"],
+  plugins: [
+    "@chainsafe/truffle-plugin-abigen",
+    "truffle-plugin-verify",
+    "truffle-contract-size",
+  ],
   api_keys: {
-    etherscan: process.env.ETHERSCAN_KEY,
-    snowtrace: process.env.SNOWTRACE,
-    polygonscan: process.env.POLYGONSCAN,
-    bscscan: process.env.BSCSCAN,
-    ftmscan: process.env.FTMSCAN,
+    etherscan: "",
+    snowtrace: "",
+    polygonscan: "",
+    bscscan: "",
+    ftmscan: "",
+    arbiscan: "",
+    optimistic_etherscan: "",
   },
 };
