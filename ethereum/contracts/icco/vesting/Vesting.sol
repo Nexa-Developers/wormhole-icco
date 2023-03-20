@@ -122,6 +122,10 @@ contract VestingWallet is Context, ReentrancyGuard {
     function vestedLinearClaimable(uint256 totalAllocation, uint256 alreadyClaimedAmount) public view returns(uint256) {
         uint256 linearClaimable; 
         if(_vestingInformation._cliffStartTimeInSeconds > 0){
+            if(block.timestamp <= _vestingInformation._cliffStartTimeInSeconds){
+                linearClaimable = 0;
+                return linearClaimable;
+            }
             linearClaimable = vestedTotalCliffAmount(totalAllocation) + vestedLinearUnlocked(totalAllocation);
         }
         else{

@@ -17,8 +17,8 @@ module.exports = async function(deployer, network) {
   const vestingDetails = {
     _cliffStartTimeInSeconds: nowTime.toString(),
     _cliffPercentage: "50",
-    _linearStartTimeInSeconds: (nowTime + 60).toString(),
-    _linearEndTimeInSeconds: (nowTime + 3600).toString()
+    _linearStartTimeInSeconds: (nowTime + 3600).toString(),
+    _linearEndTimeInSeconds: (nowTime + 86400).toString()
   }
 
   let file = fs.readFileSync(path.join(__dirname, "deployedAddresses.json"));
@@ -47,13 +47,7 @@ module.exports = async function(deployer, network) {
     verificationScript: `truffle run verify VestingWallet@${Vesting.address} --network=${network}`,
   }
 
-  let index = contents.Vesting.findIndex(item => item.network == network);
-  if(index == -1) {
-    contents.Vesting.push(VestingDetails);
-  }
-  else{
-    contents.Vesting[index] = VestingDetails;
-  }
+  contents.Vesting.push(VestingDetails);
 
   fs.writeFileSync(fp, JSON.stringify(contents, null, 2), "utf8");
 
