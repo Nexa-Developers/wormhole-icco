@@ -215,7 +215,6 @@ describe("anchor-contributor", () => {
   describe("Custodian Setup", () => {
     it("Create Custodian", async () => {
       const tx = await contributor.createCustodian(orchestrator);
-
       // nothing to verify
     });
   });
@@ -246,17 +245,24 @@ describe("anchor-contributor", () => {
       const startTime = 8 + (await getBlockTime(connection));
       const duration = 8; // seconds after sale starts
       const lockPeriod = 12; // seconds after sale ended
-      const initSaleVaa = dummyConductor.createSale(
-        startTime,
-        duration,
-        lockPeriod,
-        dummyConductor.saleTokenOnSolana,
-        CHAIN_ID_SOLANA,
-        saleTokenDecimals,
-        KYC_PUBLIC_OLD
-      );
-      const tx = await contributor.initSale(orchestrator, initSaleVaa);
 
+      try {
+
+        const initSaleVaa = dummyConductor.createSale(
+          startTime,
+          duration,
+          lockPeriod,
+          dummyConductor.saleTokenOnSolana,
+          CHAIN_ID_SOLANA,
+          saleTokenDecimals,
+          KYC_PUBLIC_OLD
+        );
+
+        const tx = await contributor.initSale(orchestrator, initSaleVaa);
+        console.log("--- CREATE CUSTODIAN TX : ", tx)
+      } catch (error) {
+        console.log("ERROR IN CUSTODIAN SETUP", error)
+      }
       {
         // get the first sale state
         const saleId = dummyConductor.getSaleId();

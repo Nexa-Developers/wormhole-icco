@@ -21,6 +21,8 @@ export class DummyConductor {
   saleStart: number;
   saleEnd: number;
   saleUnlock: number;
+  isVested: number;
+
 
   tokenAddress: string;
   tokenChain: number;
@@ -45,6 +47,7 @@ export class DummyConductor {
     this.saleStart = 0;
     this.saleEnd = 0;
     this.saleUnlock = 0;
+    this.isVested = 0;
 
     this.acceptedTokens = [];
     this.allocations = [];
@@ -116,7 +119,8 @@ export class DummyConductor {
         this.acceptedTokens,
         this.recipient,
         this.kycAuthority,
-        this.saleUnlock
+        this.saleUnlock,
+        this.isVested
       )
     );
     return this.initSaleVaa;
@@ -233,10 +237,12 @@ function encodeSaleInit(
   acceptedTokens: SolanaAcceptedToken[], // 33 * n_tokens
   recipient: string, // 32 bytes
   kycAuthority: string, // 20 bytes (ethereum address)
-  saleUnlock: number
+  saleUnlock: number,
+  isVested: number, // 1 byte
 ): Buffer {
+  console.log(" IN ENCODE SALE INIT", isVested)
   const numTokens = acceptedTokens.length;
-  const encoded = Buffer.alloc(217 + numTokens * NUM_BYTES_ACCEPTED_TOKEN);
+  const encoded = Buffer.alloc(217 + numTokens * NUM_BYTES_ACCEPTED_TOKEN + 1);
 
   encoded.writeUInt8(5, 0); // initSale payload for solana = 5
   encoded.write(toBigNumberHex(saleId, 32), 1, "hex");
@@ -252,6 +258,8 @@ function encodeSaleInit(
   encoded.write(recipient, recipientIndex, "hex");
   encoded.write(kycAuthority, recipientIndex + 32, "hex");
   encoded.write(toBigNumberHex(saleUnlock, 32), recipientIndex + 52, "hex");
+
+  encoded.writeUint8(isVested, recipientIndex + 84);
   return encoded;
 }
 

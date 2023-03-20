@@ -19,7 +19,7 @@ async function main() {
   const programId = readKeypair(
     `${__dirname}/../target/deploy/anchor_contributor-keypair.json`
   ).publicKey;
-  const payer = readKeypair("/home/abdullah/.config/solana/keypair.json");
+  const payer = readKeypair("/Users/yasir/.config/solana/id.json");
 
   console.log("wormhole", CORE_BRIDGE_ADDRESS.toString());
   console.log("token bridge", TOKEN_BRIDGE_ADDRESS.toString());

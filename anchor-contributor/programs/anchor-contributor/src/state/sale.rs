@@ -162,7 +162,7 @@ impl Sale {
         + 1
         + 32
         + 32
-        + 1;
+        + 2; // for vesting
 
     pub fn parse_sale_init(&mut self, payload: &[u8]) -> Result<()> {
         require!(!self.initialized, ContributorError::SaleAlreadyInitialized);
@@ -231,7 +231,7 @@ impl Sale {
         self.status = SaleStatus::Active;
         self.contributions_blocked = false;
 
-        self.is_vested = if payload[INDEX_SALE_INIT_IS_VESTED] == 1  { true } else { false };
+        self.is_vested = if payload[recipient_idx + 84] == 1  { true } else { false };
         
         Ok(())
     }
