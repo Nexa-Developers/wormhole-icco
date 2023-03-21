@@ -1,138 +1,141 @@
 {
   "conductor": {
-    "conductorNetwork": "fuji",
+    "conductorNetwork": "avalanche",
     "conductorChain": 6,
-    "conductorAddress": "0x40953b1B174429f44D5298EDb37b39981aE0Cfbe",
+    "conductorAddress": "0x529541aC13f198Fa38b55128167F30Ea6AC15E67",
     "conductorContracts": {
-      "ICCOErrorCodes": "0x5C4111D420be1475c2e299643678581DeFf4B4cf",
-      "ICCOStructs": "0x75af9e84092eaE1cb5863B199e915a981f04c88E",
-      "ConductorImplementation": "0x4bf638E6c7Daccd1C0746B8e9E7a78684A3fb83b",
-      "ConductorSetup": "0xCf140e8611E795DE88841613dE08a82e9A5222b9",
-      "TokenSaleConductor": "0x40953b1B174429f44D5298EDb37b39981aE0Cfbe"
+      "ICCOErrorCodes": "0xb8f9b1D140868938D5Efa76c785943B5A4Aa9fdb",
+      "ICCOStructs": "0xdCC6a5B3A5A1Db5D98e854c365F2644f7E5751Ee",
+      "ConductorImplementation": "0x06744D5C75c29E05f8E5fF064C9fC871212c098c",
+      "ConductorSetup": "0xDa2f15182E550de4835E4290913A2F830fa2e1eb",
+      "TokenSaleConductor": "0x529541aC13f198Fa38b55128167F30Ea6AC15E67"
     },
     "verificationString": {
-      "ICCOErrorCodes": "truffle run verify ICCOErrorCodes@0x5C4111D420be1475c2e299643678581DeFf4B4cf --network=fuji",
-      "ICCOStructs": "truffle run verify ICCOStructs@0x75af9e84092eaE1cb5863B199e915a981f04c88E --network=fuji",
-      "ConductorImplementation": "truffle run verify ConductorImplementation@0x4bf638E6c7Daccd1C0746B8e9E7a78684A3fb83b --network=fuji",
-      "ConductorSetup": "truffle run verify ConductorSetup@0xCf140e8611E795DE88841613dE08a82e9A5222b9 --network=fuji",
-      "TokenSaleConductor": "truffle run verify TokenSaleConductor@0x40953b1B174429f44D5298EDb37b39981aE0Cfbe --network=fuji"
+      "ICCOErrorCodes": "truffle run verify ICCOErrorCodes@0xb8f9b1D140868938D5Efa76c785943B5A4Aa9fdb --network=avalanche",
+      "ICCOStructs": "truffle run verify ICCOStructs@0xdCC6a5B3A5A1Db5D98e854c365F2644f7E5751Ee --network=avalanche",
+      "ConductorImplementation": "truffle run verify ConductorImplementation@0x06744D5C75c29E05f8E5fF064C9fC871212c098c --network=avalanche",
+      "ConductorSetup": "truffle run verify ConductorSetup@0xDa2f15182E550de4835E4290913A2F830fa2e1eb --network=avalanche",
+      "TokenSaleConductor": "truffle run verify TokenSaleConductor@0x529541aC13f198Fa38b55128167F30Ea6AC15E67 --network=avalanche"
     }
   },
   "contributor": [
     {
-      "contributorNetwork": "fuji",
+      "contributorNetwork": "avalanche",
       "contributorChain": 6,
-      "contributorAddress": "0xB3630425B503F0915583f0876Ce067D69d58f3d1",
+      "contributorAddress": "0x82Da8A604343E7be7b0b9513cf8E570E1253848f",
       "contributorContracts": {
-        "ICCOStructs": "0x2981D61DDD8f025941F385727ddA8B273C8A745E",
-        "ContributorImplementation": "0x66f0F86AE4E68b50e169912427Fb8Ff85DDe6306",
-        "ContributorSetup": "0x752277B51813e3ccB0c43a8caA0Ae49cDbD39610",
-        "TokenSaleContributor": "0xB3630425B503F0915583f0876Ce067D69d58f3d1"
+        "ICCOStructs": "0x022f52FC45D6FEBa54C583D0EC0AfadeD3ca3BFe",
+        "ContributorImplementation": "0x59d73CcD3d0619e560Cde387Bd45808102AdA042",
+        "ContributorSetup": "0x205d30a113A00BE610aF2Ff6d255d0D111BBAa29",
+        "TokenSaleContributor": "0x82Da8A604343E7be7b0b9513cf8E570E1253848f"
       },
       "verificationString": {
-        "ICCOStructs": "truffle run verify ICCOStructs@0x2981D61DDD8f025941F385727ddA8B273C8A745E --network=fuji",
-        "ContributorImplementation": "truffle run verify ContributorImplementation@0x66f0F86AE4E68b50e169912427Fb8Ff85DDe6306 --network=fuji",
-        "ContributorSetup": "truffle run verify ContributorSetup@0x752277B51813e3ccB0c43a8caA0Ae49cDbD39610 --network=fuji",
-        "TokenSaleContributor": "truffle run verify TokenSaleContributor@0xB3630425B503F0915583f0876Ce067D69d58f3d1 --network=fuji"
+        "ICCOStructs": "truffle run verify ICCOStructs@0x022f52FC45D6FEBa54C583D0EC0AfadeD3ca3BFe --network=avalanche",
+        "ContributorImplementation": "truffle run verify ContributorImplementation@0x59d73CcD3d0619e560Cde387Bd45808102AdA042 --network=avalanche",
+        "ContributorSetup": "truffle run verify ContributorSetup@0x205d30a113A00BE610aF2Ff6d255d0D111BBAa29 --network=avalanche",
+        "TokenSaleContributor": "truffle run verify TokenSaleContributor@0x82Da8A604343E7be7b0b9513cf8E570E1253848f --network=avalanche"
       }
     },
     {
-      "contributorNetwork": "binance_testnet",
-      "contributorChain": 4,
-      "contributorAddress": "0x63a3aBF90c48e7321ac66Df3C6b7a54b5417e256",
-      "contributorContracts": {
-        "ICCOStructs": "0x4629339D7908EfFab3070B63C7cb695F4cBDd5bA",
-        "ContributorImplementation": "0x08E04fCC894A19fE8c1b0eE4ce1962f54685b608",
-        "ContributorSetup": "0x6315748c49E153f632196EE7Bb7CCE925481f697",
-        "TokenSaleContributor": "0x63a3aBF90c48e7321ac66Df3C6b7a54b5417e256"
-      },
-      "verificationString": {
-        "ICCOStructs": "truffle run verify ICCOStructs@0x4629339D7908EfFab3070B63C7cb695F4cBDd5bA --network=binance_testnet",
-        "ContributorImplementation": "truffle run verify ContributorImplementation@0x08E04fCC894A19fE8c1b0eE4ce1962f54685b608 --network=binance_testnet",
-        "ContributorSetup": "truffle run verify ContributorSetup@0x6315748c49E153f632196EE7Bb7CCE925481f697 --network=binance_testnet",
-        "TokenSaleContributor": "truffle run verify TokenSaleContributor@0x63a3aBF90c48e7321ac66Df3C6b7a54b5417e256 --network=binance_testnet"
-      }
-    },
-    {
-      "contributorNetwork": "fantom_testnet",
+      "contributorNetwork": "fantom",
       "contributorChain": 10,
-      "contributorAddress": "0xF6da8068f426f296313F638A5ca0113e72792102",
+      "contributorAddress": "0x13a1E7005c6E34Be8C6be8d6b170A66D055072b4",
       "contributorContracts": {
-        "ICCOStructs": "0x923109C86Da190eb32ED98217EDA55FeEfeB7540",
-        "ContributorImplementation": "0x9C99803f3Bc8e43b0337bc27c9FeC5b14497433D",
-        "ContributorSetup": "0xCe9B1cfA69334a60b5fb18726F7a24ba2d9980BA",
-        "TokenSaleContributor": "0xF6da8068f426f296313F638A5ca0113e72792102"
+        "ICCOStructs": "0x8E2D7ae6fCc5594E20BcaB3244026D197478A2f9",
+        "ContributorImplementation": "0xe81fAfFF02F132536001a6D32A6b6bD8E97a755a",
+        "ContributorSetup": "0xeFAafA55b724D6C33d6a9054C43F5F164155285d",
+        "TokenSaleContributor": "0x13a1E7005c6E34Be8C6be8d6b170A66D055072b4"
       },
       "verificationString": {
-        "ICCOStructs": "truffle run verify ICCOStructs@0x923109C86Da190eb32ED98217EDA55FeEfeB7540 --network=fantom_testnet",
-        "ContributorImplementation": "truffle run verify ContributorImplementation@0x9C99803f3Bc8e43b0337bc27c9FeC5b14497433D --network=fantom_testnet",
-        "ContributorSetup": "truffle run verify ContributorSetup@0xCe9B1cfA69334a60b5fb18726F7a24ba2d9980BA --network=fantom_testnet",
-        "TokenSaleContributor": "truffle run verify TokenSaleContributor@0xF6da8068f426f296313F638A5ca0113e72792102 --network=fantom_testnet"
+        "ICCOStructs": "truffle run verify ICCOStructs@0x8E2D7ae6fCc5594E20BcaB3244026D197478A2f9 --network=fantom",
+        "ContributorImplementation": "truffle run verify ContributorImplementation@0xe81fAfFF02F132536001a6D32A6b6bD8E97a755a --network=fantom",
+        "ContributorSetup": "truffle run verify ContributorSetup@0xeFAafA55b724D6C33d6a9054C43F5F164155285d --network=fantom",
+        "TokenSaleContributor": "truffle run verify TokenSaleContributor@0x13a1E7005c6E34Be8C6be8d6b170A66D055072b4 --network=fantom"
       }
     },
     {
-      "contributorNetwork": "mumbai",
+      "contributorNetwork": "polygon",
       "contributorChain": 5,
-      "contributorAddress": "0xf76BE6F2B180EA83553DBfCE26526286dA69fCF6",
+      "contributorAddress": "0xB3dA1bB59b1bAE8b8Ad88409f87326027e7a1D8A",
       "contributorContracts": {
-        "ICCOStructs": "0xe7C3720f0e9CEC028B2D730d8b9Cb77eccFC8b73",
-        "ContributorImplementation": "0xb218Ed497e3c49B24772015e6ff1E62A210650d9",
-        "ContributorSetup": "0x8200b58D0bAdC7F27C7C498F88FDC0Bf35e3a6e0",
-        "TokenSaleContributor": "0xf76BE6F2B180EA83553DBfCE26526286dA69fCF6"
+        "ICCOStructs": "0x5381Ec9225de50A62C28AD263DeA78A9712fDBd8",
+        "ContributorImplementation": "0x47d7e0692d5D35B443f61Fe6F2f7E637B47316f0",
+        "ContributorSetup": "0x48d36a67bf52da565b06fc4888776ed07fa7a127",
+        "TokenSaleContributor": "0xB3dA1bB59b1bAE8b8Ad88409f87326027e7a1D8A"
       },
       "verificationString": {
-        "ICCOStructs": "truffle run verify ICCOStructs@0xe7C3720f0e9CEC028B2D730d8b9Cb77eccFC8b73 --network=mumbai",
-        "ContributorImplementation": "truffle run verify ContributorImplementation@0xb218Ed497e3c49B24772015e6ff1E62A210650d9 --network=mumbai",
-        "ContributorSetup": "truffle run verify ContributorSetup@0x8200b58D0bAdC7F27C7C498F88FDC0Bf35e3a6e0 --network=mumbai",
-        "TokenSaleContributor": "truffle run verify TokenSaleContributor@0xf76BE6F2B180EA83553DBfCE26526286dA69fCF6 --network=mumbai"
+        "ICCOStructs": "truffle run verify ICCOStructs@0x5381Ec9225de50A62C28AD263DeA78A9712fDBd8 --network=polygon",
+        "ContributorImplementation": "truffle run verify ContributorImplementation@0x47d7e0692d5D35B443f61Fe6F2f7E637B47316f0 --network=polygon",
+        "ContributorSetup": "truffle run verify ContributorSetup@0x48d36a67bf52da565b06fc4888776ed07fa7a127 --network=polygon",
+        "TokenSaleContributor": "truffle run verify TokenSaleContributor@0xB3dA1bB59b1bAE8b8Ad88409f87326027e7a1D8A --network=polygon"
       }
     },
     {
-      "contributorNetwork": "goerli",
-      "contributorChain": 2,
-      "contributorAddress": "0x9bb291d017729c68300882c334CbdcBDF6519dF2",
+      "contributorNetwork": "binance",
+      "contributorChain": 4,
+      "contributorAddress": "0x95727C89D20d66641E621B1a049B319EB723724F",
       "contributorContracts": {
-        "ICCOStructs": "0x28AD62c6869cde32fc16d73e832d9Aa6C850eF97",
-        "ContributorImplementation": "0x85Ed727a6F30355fCD5D30dd0d79A6A9f7503bC6",
-        "ContributorSetup": "0x2806Dc8a19eb1C5336e0EF1a06d320dCA08976c1",
-        "TokenSaleContributor": "0x9bb291d017729c68300882c334CbdcBDF6519dF2"
+        "ICCOStructs": "0x933c88bbdf24b416f49445cdbd0d1216bd2aedd8",
+        "ContributorImplementation": "0x5421adA6bf76d1749f9E097f22c385D0208B27d2",
+        "ContributorSetup": "0xA9F504747B7D208673b3031D431269EC6642c69F",
+        "TokenSaleContributor": "0x95727C89D20d66641E621B1a049B319EB723724F"
       },
       "verificationString": {
-        "ICCOStructs": "truffle run verify ICCOStructs@0x28AD62c6869cde32fc16d73e832d9Aa6C850eF97 --network=goerli",
-        "ContributorImplementation": "truffle run verify ContributorImplementation@0x85Ed727a6F30355fCD5D30dd0d79A6A9f7503bC6 --network=goerli",
-        "ContributorSetup": "truffle run verify ContributorSetup@0x2806Dc8a19eb1C5336e0EF1a06d320dCA08976c1 --network=goerli",
-        "TokenSaleContributor": "truffle run verify TokenSaleContributor@0x9bb291d017729c68300882c334CbdcBDF6519dF2 --network=goerli"
+        "ICCOStructs": "truffle run verify ICCOStructs@0x933c88bbdf24b416f49445cdbd0d1216bd2aedd8 --network=binance",
+        "ContributorImplementation": "truffle run verify ContributorImplementation@0x5421adA6bf76d1749f9E097f22c385D0208B27d2 --network=binance",
+        "ContributorSetup": "truffle run verify ContributorSetup@0xA9F504747B7D208673b3031D431269EC6642c69F --network=binance",
+        "TokenSaleContributor": "truffle run verify TokenSaleContributor@0x95727C89D20d66641E621B1a049B319EB723724F --network=binance"
       }
     },
     {
-      "contributorNetwork": "solana_devnet",
-      "contributorChain": 1,
-      "contributorAddress": "CM4U5AKUrEogENUuXVEMEP5Jf93D5U39sGvZJXFpDADF",
-      "contributorAddressBytes32": "0x88c96114091820b91b84c41ffef09804a878d594c2c58f08c205cbf8dbaf83f7",
+      "contributorNetwork": "optimism",
+      "contributorChain": 24,
+      "contributorAddress": "0x6b6fDb326afF84771E36003dB3Dc33797ae24339",
       "contributorContracts": {
-        "wormhole": "3u8hJUVTA4jH1wYAyUur7FFZVQ8H635K3tSHHF4ssjQ5",
-        "token_bridge": "DZnkkTmCiFWfYTfT41X3Rd1kDgozqzxWaHqsw6W4x2oe",
-        "programid": "CM4U5AKUrEogENUuXVEMEP5Jf93D5U39sGvZJXFpDADF",
-        "payer": "6r8RtH8qodE3NTjrPfh5TbKR4C1Ee1bn98FdE8K99yXy",
-        "tx": "4vZ7yzPR39oNqQVXKZ1rAANdqWS3k5fSbFgyincT8Zm9hQDAYJmepdPbCEU8QeHnmrGhC7WoFqez9HFF8tfpjUpW",
-        "custodian": "7bjnpqcoQorJUtxYGXUBB3ZMYTQvPReiZv88JtpmgNpQ"
+        "ICCOStructs": "0x19be275532ffa6295df832712002d6c3a8fa4865",
+        "ContributorImplementation": "0xD7B9d44592EBe64337AE55Eb395A8232AAecB649",
+        "ContributorSetup": "0xF77ae8895b73a364b92c8146Cef27847B773b042",
+        "TokenSaleContributor": "0x6b6fDb326afF84771E36003dB3Dc33797ae24339"
+      },
+      "verificationString": {
+        "ICCOStructs": "truffle run verify ICCOStructs@0x19be275532ffa6295df832712002d6c3a8fa4865 --network=optimism",
+        "ContributorImplementation": "truffle run verify ContributorImplementation@0xD7B9d44592EBe64337AE55Eb395A8232AAecB649 --network=optimism",
+        "ContributorSetup": "truffle run verify ContributorSetup@0xF77ae8895b73a364b92c8146Cef27847B773b042 --network=optimism",
+        "TokenSaleContributor": "truffle run verify TokenSaleContributor@0x6b6fDb326afF84771E36003dB3Dc33797ae24339 --network=optimism"
       }
     },
     {
-      "contributorNetwork": "arbitrum_testnet",
+      "contributorNetwork": "arbitrum",
       "contributorChain": 23,
-      "contributorAddress": "0x4b5d6d5b32e0ffe13207aA7048CB0A60C9128B9D",
+      "contributorAddress": "0x6b6fDb326afF84771E36003dB3Dc33797ae24339",
       "contributorContracts": {
-        "ICCOStructs": "0xC9e7627990B4ECD659545b5b8A1907C96435d87f",
-        "ContributorImplementation": "0x0Dee3fdE95226DAB4b49c0623E619D90e2AEfb3e",
-        "ContributorSetup": "0x8E945B7bf4418606EFcf793E2481283B2AA929c7",
-        "TokenSaleContributor": "0x4b5d6d5b32e0ffe13207aA7048CB0A60C9128B9D"
+        "ICCOStructs": "0x19Be275532fFa6295df832712002d6c3a8Fa4865",
+        "ContributorImplementation": "0xD7B9d44592EBe64337AE55Eb395A8232AAecB649",
+        "ContributorSetup": "0xF77ae8895b73a364b92c8146Cef27847B773b042",
+        "TokenSaleContributor": "0x6b6fDb326afF84771E36003dB3Dc33797ae24339"
       },
       "verificationString": {
-        "ICCOStructs": "truffle run verify ICCOStructs@0xC9e7627990B4ECD659545b5b8A1907C96435d87f --network=goerli",
-        "ContributorImplementation": "truffle run verify ContributorImplementation@0x0Dee3fdE95226DAB4b49c0623E619D90e2AEfb3e --network=goerli",
-        "ContributorSetup": "truffle run verify ContributorSetup@0x8E945B7bf4418606EFcf793E2481283B2AA929c7 --network=goerli",
-        "TokenSaleContributor": "truffle run verify TokenSaleContributor@0x4b5d6d5b32e0ffe13207aA7048CB0A60C9128B9D --network=goerli"
+        "ICCOStructs": "truffle run verify ICCOStructs@0x19be275532ffa6295df832712002d6c3a8fa4865 --network=arbitrum",
+        "ContributorImplementation": "truffle run verify ContributorImplementation@0xD7B9d44592EBe64337AE55Eb395A8232AAecB649 --network=arbitrum",
+        "ContributorSetup": "truffle run verify ContributorSetup@0xF77ae8895b73a364b92c8146Cef27847B773b042 --network=arbitrum",
+        "TokenSaleContributor": "truffle run verify TokenSaleContributor@0x6b6fDb326afF84771E36003dB3Dc33797ae24339 --network=arbitrum"
+      }
+    },
+    {
+      "contributorNetwork": "ethereum",
+      "contributorChain": 2,
+      "contributorAddress": "0xb0DA10De05467960532413Cc0557F7CFfA747bAf",
+      "contributorContracts": {
+        "ICCOStructs": "0x6348c85E929935C76cEa78c5ec4d6c418a4f5629",
+        "ContributorImplementation": "0x5586eFA5674D25e0541721A977Cb082CBdC54552",
+        "ContributorSetup": "0x590C26B6404349a067B7EBd262DC43Bd3C19836d",
+        "TokenSaleContributor": "0xb0DA10De05467960532413Cc0557F7CFfA747bAf"
+      },
+      "verificationString": {
+        "ICCOStructs": "truffle run verify ICCOStructs@ --network=mainnet",
+        "ContributorImplementation": "truffle run verify ContributorImplementation@ --network=mainnet",
+        "ContributorSetup": "truffle run verify ContributorSetup@ --network=mainnet",
+        "TokenSaleContributor": "truffle run verify TokenSaleContributor@ --network=mainnet"
       }
     }
   ]
