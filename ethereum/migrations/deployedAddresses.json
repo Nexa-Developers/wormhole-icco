@@ -122,7 +122,7 @@
       }
     },
     {
-      "contributorNetwork": "ethereum",
+      "contributorNetwork": "mainnet",
       "contributorChain": 2,
       "contributorAddress": "0xb0DA10De05467960532413Cc0557F7CFfA747bAf",
       "contributorContracts": {
